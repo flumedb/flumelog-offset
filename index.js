@@ -20,7 +20,6 @@ function frame (data, _offset) {
     //mutate the items
     var buf = item.value
     item.offset = 0 + offset + _offset
-    console.log('item length', buf.length)
     b.writeUInt32BE(buf.length, 0 + offset) //start
     b.writeUInt32BE(buf.length, 4+buf.length + offset) //end
     item.value.copy(b, 4 + offset, 0, buf.length)
@@ -104,36 +103,5 @@ module.exports = function (file, length) {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
