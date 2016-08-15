@@ -7,7 +7,10 @@
     "type": "git",
     "url": "git://github.com/dominictarr/offset-log.git"
   },
-  "dependencies": {},
+  "dependencies": {
+    "pull-live": "^1.0.1",
+    "pull-notify": "^0.1.1"
+  },
   "devDependencies": {
     "tape": "^4.6.0"
   },
@@ -17,3 +20,4 @@
   "author": "'Dominic Tarr' <dominic.tarr@gmail.com> (dominictarr.com)",
   "license": "MIT"
 }
+
