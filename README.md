@@ -20,9 +20,21 @@ I am writing this to experiment with indexes that are simply
 a list of keys with a particular sort applied to them - just enough
 to enable binary search.
 
+## API ideas
+
+there are lots of ways you could implement a frame around the data,
+which might have different benefits. you could use json or csv format,
+and then you could view the database in a text editor.
+
+you could encrypt the data, with authentication so that you can detect interference.
+
+what should the api for framing look like? given an offset,
+you need to be able to get the next, and the previous 
+
 ## License
 
 MIT
+
 
 
 
