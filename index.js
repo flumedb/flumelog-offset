@@ -23,18 +23,6 @@ function frame (data) {
   return b
 }
 
-function once (fn) {
-  var called = false
-  var err = new Error('called twice')
-  return function () {
-    var args = [].slice.call(arguments)
-    if(called) throw err
-    called = true
-    return fn.apply(this, args)
-
-  }
-}
-
 module.exports = function (file, length) {
 
   var notify = Notify()
@@ -70,24 +58,23 @@ module.exports = function (file, length) {
     //in the direction of the log
     stream: Live(function (opts) {
       var reverse = opts && opts.reverse
-      var next = reverse ? (opts && opts.max || offset) : (opts && opts.min || 0)
+      var next = reverse ? (opts && opts.max || blocks.size()) : (opts && opts.min || 0)
       var diff = reverse ? -1 : 1
       var get = reverse ? log.getPrevious : log.get
 
       return function (abort, cb) {
-        cb = once(cb)
         if(abort) cb(abort)
         else if(reverse && next <= 0)
           cb(true)
         else
-          get(next, once(function (err, value) {
+          get(next, function (err, value) {
             if(err) return cb(true) //err)
-            else if(!value) return cb(true)
+            else if(!value || !value.length) return cb(true)
             else {
               next = next + (value.length + 8)*diff
               cb(null, value)
             }
-          }))
+          })
       }
     }, function (opts) {
       return notify.listen()
@@ -107,14 +94,13 @@ module.exports = function (file, length) {
       //if offset is near the end of the block, read two blocks.
       blocks.readUInt32BE(offset, function (err, length) {
         if(err) return cb(err)
-        blocks.read(offset + 4, offset+4 + length, once(cb))
+        blocks.read(offset + 4, offset+4 + length, cb)
       })
     },
     //get the record _before_ the given offset.
     getPrevious: function (_offset, cb) {
       //don't read before start of file...
-      var b = new Buffer(Math.min(length, _offset))
-
+      _offset = _offset || blocks.size() 
       if(_offset == 0) return cb(new Error('attempted read previous to first object'))
       blocks.readUInt32BE(_offset - 4, function (err, length) {
         if(err) return cb(err)
@@ -123,6 +109,5 @@ module.exports = function (file, length) {
     },
   }
 }
-
 
 
