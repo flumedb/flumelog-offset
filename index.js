@@ -3,6 +3,8 @@ var fs = require('fs')
 var isBuffer = Buffer.isBuffer
 var Notify = require('pull-notify')
 var Live = require('pull-live')
+var pull = require('pull-stream/pull')
+var Map = require('pull-stream/throughs/map')
 
 var Blocks = require('block-reader')
 
@@ -21,6 +23,14 @@ function frame (data) {
     offset += buf.length + 8
   }
   return b
+}
+
+function format (opts) {
+  var keys = opts.keys === true //default to false
+  var values = opts.value !== false //default to true
+  return Map(function (data) {
+    return keys && values ? data : values ? data.value : data.key
+  })
 }
 
 module.exports = function (file, length) {
@@ -62,7 +72,7 @@ module.exports = function (file, length) {
       var diff = reverse ? -1 : 1
       var get = reverse ? log.getPrevious : log.get
 
-      return function (abort, cb) {
+      return pull(function (abort, cb) {
         if(abort) cb(abort)
         else if(reverse && next <= 0)
           cb(true)
@@ -71,20 +81,21 @@ module.exports = function (file, length) {
             if(err) return cb(true) //err)
             else if(!value || !value.length) return cb(true)
             else {
+              var _offset = next
               next = next + (value.length + 8)*diff
-              cb(null, value)
+              cb(null, {key: _offset, value: value})
             }
           })
-      }
+      }, format(opts))
     }, function (opts) {
-      return notify.listen()
+      return pull(notify.listen(), format(opts))
     }),
     //if value is an array of buffers, then treat that as a batch.
     append: function (value, cb) {
       if(!isBuffer(value)) throw new Error('value must be a buffer')
       queue.push({value: value, cb: function (err, offset) {
         if(err) return cb(err)
-        notify(value)
+        notify({key: offset, value: value})
         cb(null, offset)
       }})
       write()
@@ -109,5 +120,4 @@ module.exports = function (file, length) {
     },
   }
 }
-
 
