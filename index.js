@@ -41,7 +41,7 @@ module.exports = function (file, length) {
 
   var queue = [], writing = false
   //TODO: check current size of file!
-  var offset = 0
+  var offset = -1
 
   function write () {
     if(writing) return
@@ -51,11 +51,13 @@ module.exports = function (file, length) {
     var framed = frame(queue)
     var _queue = queue
     queue = []
-    blocks.append(framed, function (err, offset) {
+    blocks.append(framed, function (err, _offset) {
       writing = false
       while(_queue.length) {
         var q = _queue.shift()
-        q.cb(err, (offset - framed.length) + q.offset)
+        var o = (_offset - framed.length) + q.offset
+        offset = Math.max(offset, o)
+        q.cb(err, o)
       }
       if(queue.length) write()
     })
@@ -66,15 +68,19 @@ module.exports = function (file, length) {
     //create a stream between any two records.
     //read the first value, then scan forward or backwards
     //in the direction of the log
+
+    //using pull-live this way means that things added in real-time are buffered
+    //in memory until they are read, that means less predictable memory usage.
+    //instead, we should track the offset we are up to, and wait if necessary.
     stream: Live(function (opts) {
       var reverse = opts && opts.reverse
       var next = reverse ? (opts && opts.max || blocks.size()) : (opts && opts.min || 0)
       var diff = reverse ? -1 : 1
       var get = reverse ? log.getPrevious : log.get
-
+      var end = offset
       return pull(function (abort, cb) {
         if(abort) cb(abort)
-        else if(reverse && next <= 0)
+        else if(reverse ? next <= 0 : next > end)
           cb(true)
         else
           get(next, function (err, value) {
@@ -120,4 +126,3 @@ module.exports = function (file, length) {
     },
   }
 }
-
