@@ -43,6 +43,10 @@ module.exports = function (file, length) {
   //TODO: check current size of file!
   var offset = -1
 
+  try {
+    offset = fs.statSync(file).size
+  } catch(_) {}
+
   function write () {
     if(writing) return
     if(!queue.length) return
@@ -98,6 +102,19 @@ module.exports = function (file, length) {
     }),
     //if value is an array of buffers, then treat that as a batch.
     append: function (value, cb) {
+      //TODO: make this like, actually durable...
+      if(Array.isArray(value)) {
+        var offsets = []
+        value.forEach(function (v) {
+          queue.push({value: v, cb: function (err, offset) {
+            offsets.push(offset)
+            if(offsets.length === value.length)
+              cb(null, offsets)
+          }})
+        })
+
+        return write()
+      }
       if(!isBuffer(value)) throw new Error('value must be a buffer')
       queue.push({value: value, cb: function (err, offset) {
         if(err) return cb(err)
@@ -126,3 +143,10 @@ module.exports = function (file, length) {
     },
   }
 }
+
+
+
+
+
+
+
