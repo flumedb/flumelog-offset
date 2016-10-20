@@ -87,3 +87,22 @@ tape('reverse', function (t) {
   )
 })
 
+tape('append batch', function (t) {
+  var file = '/tmp/offset-test_2_'+Date.now()+'.log'
+  var db = Offset(file, 16)
+
+  db.append([
+    new Buffer('hello world'),
+    new Buffer('hello offset db'),
+  ], function (err, offsets) {
+    if(err) throw err
+    t.deepEqual(offsets, [0, 19])
+    console.log('OFFSETS', offsets)
+    t.end()
+  })
+
+})
+
+
+
+
