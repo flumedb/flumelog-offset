@@ -33,10 +33,12 @@ tape('append objects, and stream them out the same', function (t) {
     if(--n) return
     pull(
       log.stream({keys:true, values: true}),
+
       pull.map(function (data) {
         if(data.sync) return data
         return {key: data.key, value: decode(data.value)}
       }),
+      pull.through(console.log),
       pull.collect(function (err, a) {
         if(err) throw err
         t.deepEqual(ary, a)
@@ -47,6 +49,9 @@ tape('append objects, and stream them out the same', function (t) {
 
   pull(
     log.stream({live: true, keys: true, values: true, sync: false}),
+    pull.through(function (v) {
+        console.log('STREAM', v.key, v.value, v.value.toString())
+    }),
     pull.map(function (data) {
       if(data.sync) return data
       return {key: data.key, value: decode(data.value)}
