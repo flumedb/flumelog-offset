@@ -76,7 +76,6 @@ tape('stream', function (t) {
   pull(
     db.stream({min: 0, keys: false}),
     pull.collect(function (err, ary) {
-      console.log("COLLECT", ary)
       t.deepEqual(ary.map(String), ['hello world', 'hello offset db'])
       t.end()
     })
@@ -98,7 +97,7 @@ tape('reverse', function (t) {
     })
   )
 })
-return
+
 tape('append batch', function (t) {
   var file = '/tmp/offset-test_2_'+Date.now()+'.log'
   var db = Offset(file, 16)
@@ -109,7 +108,6 @@ tape('append batch', function (t) {
   ], function (err, offsets) {
     if(err) throw err
     t.deepEqual(offsets, [0, 19])
-    console.log('OFFSETS', offsets)
     t.end()
   })
 
@@ -178,6 +176,9 @@ tape('stream in before append cb', function (t) {
 
 
 })
+
+
+
 
 
 
