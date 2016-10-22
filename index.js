@@ -1,3 +1,4 @@
+'use strict'
 var fs = require('fs')
 
 var isBuffer = Buffer.isBuffer
@@ -20,7 +21,6 @@ function frame (data) {
     //mutate the items
     var buf = item.value
     item.offset = 0 + offset
-    console.log(buf.length, buf)
     b.writeUInt32BE(buf.length, 0 + offset) //start
     b.writeUInt32BE(buf.length, 4+buf.length + offset) //end
     item.value.copy(b, 4 + offset, 0, buf.length)
@@ -29,15 +29,17 @@ function frame (data) {
   return b
 }
 
-function format (keys, values, key, value) {
+function format (keys, values, key, value, cursor) {
   return (
     keys !== false
     ? values !== false
-      ? {key: key, value: value}
+      ? {key: key, value: value, seq: cursor}
       : key
     : value
   )
 }
+
+var k = 0
 
 module.exports = function (file, length) {
 
@@ -86,6 +88,7 @@ module.exports = function (file, length) {
       var get = reverse ? log.getPrevious : log.get
       var diff = reverse ? -1 : 1
       var live = opts.live
+      var aborted = false
       if(!reverse && opts.gte == null) {
         cursor = 0
       }
@@ -93,29 +96,27 @@ module.exports = function (file, length) {
         cursor = reverse ? opts.lt : opts.gte
 
       function next (cb) {
+        if(aborted) return cb(aborted)
         get(cursor, function (err, value, length) {
           if(!value.length) throw new Error('read empty value')
-          _cursor = cursor
+          var _cursor = cursor
           cursor += (length * diff)
-          cb(err, format(opts.keys, opts.value, _cursor, value))
+          cb(err, format(opts.keys, opts.value, _cursor, value, cursor))
         })
       }
 
       return function (abort, cb) {
+        if(aborted = abort) return cb(abort)
+
         offset.once(function (_offset) {
           //if(_offset < cursor) //throw new Error('offset smaller than cursor')
-          if(cursor == null && reverse)
-            offset.once(function (_offset) {
-              cursor = _offset
-              next(cb)
-            })
+          if(cursor == null && reverse) {
+            cursor = _offset; next(cb)
+          }
           else if(reverse ? cursor > 0 : cursor < _offset) next(cb)
           else if(reverse ? cursor <= 0 : cursor >= _offset) {
-            if(!live) cb(true)
-            else offset.once(function (_offset) {
-              if(cursor == _offset) throw new Error('expected offset to update')
-              next(cb)
-            }, false)
+            if(!live) return cb(true)
+            offset.once(function () { next(cb) }, false)
           }
           else
             throw new Error('should never happen: cursor is invalid state:'+cursor+' offset:'+_offset)
