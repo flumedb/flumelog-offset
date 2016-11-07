@@ -16,24 +16,24 @@ pull(
 )
 
 tape('simple', function (t) {
-  t.equal(db.offset.value, undefined)
+  t.equal(db.since.value, undefined)
   var offsets = []
-  var rm = db.offset(function (_v) {
+  var rm = db.since(function (_v) {
     offsets.push(_v)
   })
-  db.offset.once(function (_v) {
-    t.equal(_v, 0)
+  db.since.once(function (_v) {
+    t.equal(_v, -1)
 
     db.append(new Buffer('hello world'), function (err, offset1) {
       if(err) throw err
-      console.log(db.offset.value, offset1)
+      console.log(db.since.value, offset1)
       t.equal(offset1, 0)
       //NOTE: 'hello world'.length + 8 (start frame + end frame)
-      t.equal(db.offset.value, 19)
+      t.equal(db.since.value, 0)
       db.append(new Buffer('hello offset db'), function (err, offset2) {
         if(err) throw err
         t.equal(offset2, 19)
-        t.deepEqual(offsets, [0, 19, 19+15+8], 'appended two records')
+        t.deepEqual(offsets, [-1, 0, 19], 'appended two records')
         db.get(offset1, function (err, b) {
           if(err) throw err
           t.equal(b.toString(), 'hello world', 'read second value')
@@ -107,7 +107,7 @@ tape('append batch', function (t) {
     new Buffer('hello offset db'),
   ], function (err, offsets) {
     if(err) throw err
-    t.deepEqual(offsets, [0, 19])
+    t.deepEqual(offsets, 19)
     t.end()
   })
 
@@ -127,8 +127,8 @@ tape('stream in empty database', function (t) {
 //    t.end()
 //  })
 
-  db.offset.once(function (_offset) {
-    t.equal(_offset, 0, 'offset is zero')
+  db.since.once(function (_offset) {
+    t.equal(_offset, -1, 'offset is zero')
   })
 
   pull(
@@ -157,8 +157,8 @@ tape('stream in before append cb', function (t) {
 //    t.end()
 //  })
 
-  db.offset.once(function (_offset) {
-    t.equal(_offset, 0, 'offset is zero')
+  db.since.once(function (_offset) {
+    t.equal(_offset, -1, 'offset is zero')
   })
 
   db.append(new Buffer('hello world'), function (err, offset) {
@@ -176,6 +176,8 @@ tape('stream in before append cb', function (t) {
 
 
 })
+
+
 
 
 
