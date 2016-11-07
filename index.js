@@ -6,6 +6,7 @@ var Obv = require('obv')
 var Append = require('append-batch')
 var Blocks = require('aligned-block-file')
 var isInteger = Number.isInteger
+var ltgt = require('ltgt')
 
 function frame (data) {
   var length = data.reduce(function (total, value) { return total + value.length }, 0)
@@ -23,25 +24,31 @@ function frame (data) {
   return b
 }
 
-function format (keys, values, key, value, cursor) {
+function format (seqs, values, seq, value, cursor) {
   return (
-    keys !== false
+    seqs !== false
     ? values !== false
-      ? {key: key, value: value, seq: cursor}
-      : key
+      ? {value: value, seq: seq}
+      : seq
     : value
   )
 }
 
 var k = 0
 
-module.exports = function (file, length) {
+function id (v) { return v }
+var id_codec = {encode: id, decode: id}
 
+module.exports = function (file, length, codec) {
+  if(!codec) codec = id_codec
   var since = Obv()
   length = length || 1024
   var blocks = Blocks(file, length, 'a+')
 
   var append = Append(function (batch, cb) {
+    batch = batch.map(codec.encode).map(function (e) {
+      return Buffer.isBuffer(e) ? e : new Buffer(e)
+    })
     blocks.append(frame(batch), function (err) {
       if(err) return cb(err)
       //else, get offset of last item.
@@ -75,19 +82,49 @@ module.exports = function (file, length) {
       var diff = reverse ? -1 : 1
       var live = opts.live
       var aborted = false
-      if(!reverse && opts.gte == null) {
-        cursor = 0
+      var skip = false
+
+      if(reverse) {
+        if(opts.lt != null) cursor = opts.lt
+        else if(opts.lte != null) {
+          cursor = opts.lte; skip = true
+        }
       }
-      else
-        cursor = reverse ? opts.lt : opts.gte
+      else {
+        if(opts.gte != null) cursor = opts.gte
+        else if(opts.gt != null) {
+          cursor = opts.gt; skip = true
+        }
+        else cursor = 0
+      }
+
+      var lower = ltgt.lowerBound(opts) || 0
+      var includeLower = ltgt.lowerBoundInclusive(opts)
+      var upper = ltgt.upperBound(opts)
+      var includeUpper = ltgt.upperBoundInclusive(opts)
+
 
       function next (cb) {
         if(aborted) return cb(aborted)
+
+        if(!reverse && upper != null && includeUpper ? cursor > upper : cursor >= upper) {
+          return cb(true)
+        }
+
         get(cursor, function (err, value, length) {
           if(!value.length) throw new Error('read empty value')
-          var _cursor = cursor
+          var _cursor = reverse ? cursor - length : cursor 
           cursor += (length * diff)
-          cb(err, format(opts.keys, opts.value, _cursor, value, cursor))
+
+          if(reverse && (includeLower ? cursor < lower : cursor <= lower))
+              return cb(true)
+
+          if(skip) {
+            skip = false
+            return next(cb)
+          }
+
+          cb(err, format(opts.seqs, opts.values, _cursor, value))
         })
       }
 
@@ -122,7 +159,7 @@ module.exports = function (file, length) {
         blocks.read(_offset + 4, _offset + 4 + length, function (err, value) {
           if(value.length !== length) throw new Error('incorrect length, expected:'+length+', was:'+value.length)
           setImmediate(function () {
-            cb(err, value, length + 8)
+            cb(err, codec.decode(value), length + 8)
           })
         })
       })
@@ -137,11 +174,10 @@ module.exports = function (file, length) {
       blocks.readUInt32BE(_offset - 4, function (err, length) {
         if(err) return cb(err)
         blocks.read(_offset - 4 - length, _offset - 4, function (err, value) {
-          cb(err, value, length + 8)
+          cb(err, codec.decode(value), length + 8)
         })
       })
     },
   }
 }
-
 
