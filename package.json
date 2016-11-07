@@ -8,11 +8,16 @@
     "url": "git://github.com/dominictarr/offset-log.git"
   },
   "dependencies": {
+    "aligned-block-file": "0.0.0",
+    "append-batch": "0.0.1",
     "pull-live": "^1.0.1",
     "pull-notify": "^0.1.1"
   },
   "devDependencies": {
-    "tape": "^4.6.0"
+    "pull-paramap": "^1.2.0",
+    "pull-stream": "^3.5.0",
+    "pull-write": "^1.1.1",
+    "tape": "^4.6.2"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
@@ -20,4 +25,3 @@
   "author": "'Dominic Tarr' <dominic.tarr@gmail.com> (dominictarr.com)",
   "license": "MIT"
 }
-
