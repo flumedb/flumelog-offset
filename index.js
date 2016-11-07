@@ -2,28 +2,23 @@
 var fs = require('fs')
 
 var isBuffer = Buffer.isBuffer
-var Notify = require('pull-notify')
-var Live = require('pull-live')
-var pull = require('pull-stream/pull')
-var Map = require('pull-stream/throughs/map')
-
-var Eventually = require('eventually')
-
-var Blocks = require('block-reader')
+var Obv = require('obv')
+var Append = require('append-batch')
+var Blocks = require('aligned-block-file')
 var isInteger = Number.isInteger
 
 function frame (data) {
-  var length = data.reduce(function (total, e) { return total + e.value.length }, 0)
+  var length = data.reduce(function (total, value) { return total + value.length }, 0)
   var b = new Buffer(length + data.length * 8)
   var offset = 0
   for(var i = 0; i < data.length; i++) {
-    var item = data[i]
+    var buf = data[i]
     //mutate the items
-    var buf = item.value
-    item.offset = 0 + offset
+    //var buf = item.value
+//    item.offset = 0 + offset
     b.writeUInt32BE(buf.length, 0 + offset) //start
     b.writeUInt32BE(buf.length, 4+buf.length + offset) //end
-    item.value.copy(b, 4 + offset, 0, buf.length)
+    buf.copy(b, 4 + offset, 0, buf.length)
     offset += buf.length + 8
   }
   return b
@@ -43,37 +38,59 @@ var k = 0
 
 module.exports = function (file, length) {
 
-  var since = Eventually()
-  var notify = Notify()
+  var since = Obv()
   length = length || 1024
   var blocks = Blocks(file, length, 'a+')
 
-  var queue = [], writing = false
-
-  function write () {
-    if(writing) return
-    if(!queue.length) return
-    writing = true
-    var data = []
-    var framed = frame(queue)
-    var _queue = queue
-    queue = []
-    blocks.append(framed, function (err, _offset) {
-      writing = false
-      while(_queue.length) {
-        var q = _queue.shift()
-        var o = (_offset - framed.length) + q.offset
-        q.cb(err, o)
-      }
-      //updates since.
-      if(queue.length) write()
+  var append = Append(function (batch, cb) {
+    
+    blocks.append(frame(batch), function (err) {
+      if(err) return cb(err)
+      //else, get offset of last item.
+      since.set(blocks.offset.value - (batch[batch.length - 1].length + 8))
+      console.log("APPEND", since.value)
+      cb(null, since.value)
     })
-  }
 
+  })
+
+//  var queue = [], writing = false
+//
+//  function write () {
+//    if(writing) return
+//    if(!queue.length) return
+//    writing = true
+//    var data = []
+//    var framed = frame(queue)
+//    var _queue = queue
+//    queue = []
+//    blocks.append(framed, function (err, _offset) {
+//      writing = false
+//      while(_queue.length) {
+//        var q = _queue.shift()
+//        var o = (_offset - framed.length) + q.offset
+//        q.cb(err, o)
+//      }
+//      //updates since.
+//      if(queue.length) write()
+//    })
+//  }
+//
+  var since = Obv()
   var offset = blocks.offset
+
+  offset.once(function (offset) {
+    console.log('OFFSET', offset)
+    if(offset === 0) return since.set(-1)
+    log.getPrevious(offset, function (err, value, length) {
+      since.set(offset - length)
+    })
+  })
+
   var log
   return log = {
-    offset: offset,
+//    offset: offset,
+    since: since,
     //create a stream between any two records.
     //read the first value, then scan forward or backwards
     //in the direction of the log
@@ -125,31 +142,33 @@ module.exports = function (file, length) {
     },
 
     //if value is an array of buffers, then treat that as a batch.
-    append: function (value, cb) {
-      //TODO: make this like, actually durable...
-      if(Array.isArray(value)) {
-        var offsets = []
-        value.forEach(function (v) {
-          queue.push({value: v, cb: function (err, offset) {
-            offsets.push(offset)
-            if(offsets.length === value.length) {
-              for(var i = 0; i < offsets.length; i++)
-                notify({key: offsets[i], value: value[i]})
-              cb(null, offsets)
-            }
-          }})
-        })
+    append: append,
 
-        return write()
-      }
-      if(!isBuffer(value)) throw new Error('value must be a buffer')
-      queue.push({value: value, cb: function (err, _offset) {
-        if(err) return cb(err)
-        notify({key: offset, value: value})
-        cb(null, _offset)
-      }})
-      write()
-    },
+//function (value, cb) {
+//      //TODO: make this like, actually durable...
+//      if(Array.isArray(value)) {
+//        var offsets = []
+//        value.forEach(function (v) {
+//          queue.push({value: v, cb: function (err, offset) {
+//            offsets.push(offset)
+//            if(offsets.length === value.length) {
+//              for(var i = 0; i < offsets.length; i++)
+//                notify({key: offsets[i], value: value[i]})
+//              cb(null, offsets)
+//            }
+//          }})
+//        })
+//
+//        return write()
+//      }
+//      if(!isBuffer(value)) throw new Error('value must be a buffer')
+//      queue.push({value: value, cb: function (err, _offset) {
+//        if(err) return cb(err)
+//        notify({key: offset, value: value})
+//        cb(null, _offset)
+//      }})
+//      write()
+//    },
     get: function (_offset, cb) {
       if(!isInteger(_offset)) throw new Error('get: offset must be integer')
       //read the block that offset is in.
@@ -158,7 +177,9 @@ module.exports = function (file, length) {
         if(err) return cb(err)
         blocks.read(_offset + 4, _offset + 4 + length, function (err, value) {
           if(value.length !== length) throw new Error('incorrect length, expected:'+length+', was:'+value.length)
-          cb(err, value, length + 8)
+          setImmediate(function () {
+            cb(err, value, length + 8)
+          })
         })
       })
     },
@@ -178,4 +199,11 @@ module.exports = function (file, length) {
     },
   }
 }
+
+
+
+
+
+
+
 

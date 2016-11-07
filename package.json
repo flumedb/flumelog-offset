@@ -1,11 +1,11 @@
 {
-  "name": "offset-log",
-  "description": "",
+  "name": "flumelog-offset",
+  "description": "a flumelog based on offset into a file",
   "version": "0.0.0",
-  "homepage": "https://github.com/dominictarr/offset-log",
+  "homepage": "https://github.com/flumedb/flumelog-offset",
   "repository": {
     "type": "git",
-    "url": "git://github.com/dominictarr/offset-log.git"
+    "url": "git://github.com/flumedb/flumelog-offset.git"
   },
   "dependencies": {
     "aligned-block-file": "0.0.0",
