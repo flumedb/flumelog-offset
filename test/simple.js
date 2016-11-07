@@ -9,7 +9,7 @@ var db = Offset(file, 16)
 var live = []
 
 pull(
-  db.stream({live: true, sync: false, keys: false}),
+  db.stream({live: true, sync: false, seqs: false}),
   pull.drain(function (data) {
     live.push(data)
   })
@@ -74,8 +74,10 @@ footer_mac(16)
 tape('stream', function (t) {
 
   pull(
-    db.stream({min: 0, keys: false}),
+    db.stream({min: 0, seqs: false}),
     pull.collect(function (err, ary) {
+      if(err) throw err
+      console.log(ary)
       t.deepEqual(ary.map(String), ['hello world', 'hello offset db'])
       t.end()
     })
@@ -90,7 +92,7 @@ tape('live', function (t) {
 
 tape('reverse', function (t) {
   pull(
-    db.stream({reverse: true, keys: false}),
+    db.stream({reverse: true, seqs: false}),
     pull.collect(function (err, ary) {
       t.deepEqual(ary.map(String), ['hello offset db', 'hello world'])
       t.end()
