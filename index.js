@@ -71,6 +71,7 @@ module.exports = function (file, length, codec) {
 
   var log
   return log = {
+    filename: file,
     since: since,
     //create a stream between any two records.
     //read the first value, then scan forward or backwards
@@ -85,7 +86,6 @@ module.exports = function (file, length, codec) {
       var live = opts.live
       var aborted = false
       var skip = false
-
 
       if(opts.gt == -1) {
         delete opts.gt
@@ -115,17 +115,24 @@ module.exports = function (file, length, codec) {
       function next (cb) {
         if(aborted) return cb(aborted)
 
-        if(!reverse && upper != null && includeUpper ? cursor > upper : cursor >= upper) {
+        if(!reverse && upper != null && includeUpper ? cursor > upper : cursor >= upper)
           return cb(true)
-        }
+
+        //we should not ever get here in live mode.
+        if(!reverse && cursor > since.value)
+          return cb(true)
 
         get(cursor, function (err, value, length) {
-          if(!length) throw new Error('read empty value:'+length)
-          var _cursor = reverse ? cursor - length : cursor 
+          if(err) return cb(err)
+          if(!length)
+            throw new Error('read empty value:'+length)
+
+          var _cursor = reverse ? cursor - length : cursor
           cursor += (length * diff)
 
-          if(reverse && (includeLower ? cursor < lower : cursor <= lower))
+          if(reverse && (includeLower ? _cursor < lower : _cursor <= lower)) {
               return cb(true)
+          }
 
           if(skip) {
             skip = false
@@ -140,18 +147,22 @@ module.exports = function (file, length, codec) {
         if(aborted = abort) return cb(abort)
 
         //uh, should this actually be since.once()?
-        offset.once(function (_offset) {
+        since.once(function (_offset) {
           //if(_offset < cursor) //throw new Error('offset smaller than cursor')
           if(cursor == null && reverse) {
-            cursor = _offset; next(cb)
+            offset.once(function (_offset) {
+              cursor = _offset; next(cb);
+            })
           }
-          else if(reverse ? cursor > 0 : cursor < _offset) next(cb)
-          else if(reverse ? cursor <= 0 : cursor >= _offset) {
+          else if(reverse ? cursor >= 0 : cursor <= _offset)
+            next(cb)
+          else {
             if(!live) return cb(true)
-            since.once(function () { next(cb) }, false)
+
+            since.once(function () {
+              next(cb)
+            }, false)
           }
-          else
-            throw new Error('should never happen: cursor is invalid state:'+cursor+' offset:'+_offset)
         })
       }
     },
@@ -163,13 +174,15 @@ module.exports = function (file, length, codec) {
       if(!isInteger(_offset)) throw new Error('get: offset must be integer')
       //read the block that offset is in.
       //if offset is near the end of the block, read two blocks.
+      if(_offset == null)
+        throw new Error('get(undefined)')
+
       blocks.readUInt32BE(_offset, function (err, length) {
         if(err) return cb(err)
         blocks.read(_offset + 4, _offset + 4 + length, function (err, value) {
           if(value.length !== length) throw new Error('incorrect length, expected:'+length+', was:'+value.length)
-          setImmediate(function () {
+            if(!value.length) return cb(new Error('empty buffer read at:'+_offset))
             cb(err, codec.decode(value), length + 8)
-          })
         })
       })
     },
@@ -189,4 +202,5 @@ module.exports = function (file, length, codec) {
     },
   }
 }
+
 
