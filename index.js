@@ -45,20 +45,22 @@ module.exports = function (file, length, codec) {
   length = length || 1024
   var blocks = Blocks(file, length, 'a+')
 
-  var append = Append(function (batch, cb) {
-    batch = batch.map(codec.encode).map(function (e) {
-      return Buffer.isBuffer(e) ? e : new Buffer(e)
-    })
-    blocks.append(frame(batch), function (err) {
-      if(err) return cb(err)
-      //else, get offset of last item.
-      since.set(blocks.offset.value - (batch[batch.length - 1].length + 8))
-      cb(null, since.value)
-    })
-  })
-
   var since = Obv()
   var offset = blocks.offset
+
+  var append = Append(function (batch, cb) {
+    since.once(function () { // wait for file to load before appending...
+      batch = batch.map(codec.encode).map(function (e) {
+        return Buffer.isBuffer(e) ? e : new Buffer(e)
+      })
+      blocks.append(frame(batch), function (err) {
+        if(err) return cb(err)
+        //else, get offset of last item.
+        since.set(blocks.offset.value - (batch[batch.length - 1].length + 8))
+        cb(null, since.value)
+      })
+    })
+  })
 
   offset.once(function (offset) {
     if(offset === 0) return since.set(-1)
@@ -83,6 +85,12 @@ module.exports = function (file, length, codec) {
       var live = opts.live
       var aborted = false
       var skip = false
+
+
+      if(opts.gt == -1) {
+        delete opts.gt
+        opts.gte = 0
+      }
 
       if(reverse) {
         if(opts.lt != null) cursor = opts.lt
@@ -112,7 +120,7 @@ module.exports = function (file, length, codec) {
         }
 
         get(cursor, function (err, value, length) {
-          if(!value.length) throw new Error('read empty value')
+          if(!length) throw new Error('read empty value:'+length)
           var _cursor = reverse ? cursor - length : cursor 
           cursor += (length * diff)
 
@@ -131,6 +139,7 @@ module.exports = function (file, length, codec) {
       return function (abort, cb) {
         if(aborted = abort) return cb(abort)
 
+        //uh, should this actually be since.once()?
         offset.once(function (_offset) {
           //if(_offset < cursor) //throw new Error('offset smaller than cursor')
           if(cursor == null && reverse) {
@@ -139,7 +148,7 @@ module.exports = function (file, length, codec) {
           else if(reverse ? cursor > 0 : cursor < _offset) next(cb)
           else if(reverse ? cursor <= 0 : cursor >= _offset) {
             if(!live) return cb(true)
-            offset.once(function () { next(cb) }, false)
+            since.once(function () { next(cb) }, false)
           }
           else
             throw new Error('should never happen: cursor is invalid state:'+cursor+' offset:'+_offset)
