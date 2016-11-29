@@ -115,12 +115,18 @@ module.exports = function (file, length, codec) {
       function next (cb) {
         if(aborted) return cb(aborted)
 
-        if(!reverse && upper != null && includeUpper ? cursor > upper : cursor >= upper)
+        if(!reverse && upper != null && includeUpper ? cursor > upper : cursor >= upper) {
           return cb(true)
+        }
 
         //we should not ever get here in live mode.
-        if(!reverse && cursor > since.value)
+        if(!reverse && cursor > since.value) {
+          if(live)
+            return since.once(function () {
+              next(cb)
+            }, false) //throw new Error('live error')
           return cb(true)
+        }
 
         get(cursor, function (err, value, length) {
           if(err) return cb(err)
@@ -154,9 +160,9 @@ module.exports = function (file, length, codec) {
               cursor = _offset; next(cb);
             })
           }
-          else if(reverse ? cursor >= 0 : cursor <= _offset)
+          else if(reverse ? cursor >= 0 : cursor <= _offset) {
             next(cb)
-          else {
+          } else {
             if(!live) return cb(true)
 
             since.once(function () {
@@ -202,5 +208,12 @@ module.exports = function (file, length, codec) {
     },
   }
 }
+
+
+
+
+
+
+
 
 
