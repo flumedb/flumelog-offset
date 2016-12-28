@@ -39,11 +39,11 @@ var k = 0
 function id (v) { return v }
 var id_codec = {encode: id, decode: id}
 
-module.exports = function (file, length, codec) {
+module.exports = function (file, length, codec, cache) {
   if(!codec) codec = id_codec
   var since = Obv()
   length = length || 1024
-  var blocks = Blocks(file, length, 'a+')
+  var blocks = Blocks(file, length, 'a+', cache)
 
   var since = Obv()
   var offset = blocks.offset
