@@ -20,7 +20,7 @@
     "pull-stream": "^3.5.0",
     "pull-write": "^1.1.1",
     "tape": "^4.6.2",
-    "test-flumelog": "0.0.2"
+    "test-flumelog": "^1.0.0"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
