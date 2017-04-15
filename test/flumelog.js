@@ -1,5 +1,8 @@
 
-require('test-flumelog')(require('../')('/tmp/test_flumelog-offset_'+Date.now(), 1024, {
+var create = require('../')
+require('test-flumelog')(function () {
+
+  return create('/tmp/test_flumelog-offset_'+Date.now(), 1024, {
   encode: function (v) {
     return new Buffer(JSON.stringify(v))
   },
@@ -7,4 +10,8 @@ require('test-flumelog')(require('../')('/tmp/test_flumelog-offset_'+Date.now(),
     return JSON.parse(v)
   },
   buffer: false
-}))
+})
+
+}, function () {
+  console.log('done')
+})
