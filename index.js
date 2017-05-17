@@ -176,6 +176,38 @@ module.exports = function (file, length, codec, cache) {
     //if value is an array of buffers, then treat that as a batch.
     append: append,
 
+    getMeta: function (_offset, cb) {
+
+      //special case for first value
+      if(_offset === 0)
+        blocks.readUInt32BE(0, function (err, length) {
+          if(err) return cb(err)
+          cb(null, {
+            seq: 0,
+            value: undefined,
+            next: 0 + length + 8
+          })
+        })
+      else
+        blocks.readUInt32BE(_offset, function (err, len) {
+          if(err) return cb(err)
+
+          //read the length of the previous item.
+          //unless this falls right on the overlap between
+          //two blocks, this will already be in the cache,
+          //so will be just a mem read.
+          blocks.readUInt32BE(_offset - 4, function (err, prev_len) {
+            if(err) return cb(err)
+            cb(null, {
+              seq: _offset,
+              value: undefined,
+              prev: offset - 8 - prev_len,
+              next: _offset + len + 8
+            })
+          })
+        })
+    },
+
     get: function (_offset, cb) {
       if(!isInteger(_offset)) throw new Error('get: offset must be integer')
       //read the block that offset is in.
@@ -186,6 +218,7 @@ module.exports = function (file, length, codec, cache) {
       blocks.readUInt32BE(_offset, function (err, length) {
         if(err) return cb(err)
         blocks.read(_offset + 4, _offset + 4 + length, function (err, value) {
+          if(err) return cb(err)
           if(value.length !== length) throw new Error('incorrect length, expected:'+length+', was:'+value.length)
             if(!value.length) return cb(new Error('empty buffer read at:'+_offset))
             cb(err, codec.decode(value), length + 8)
@@ -208,12 +241,4 @@ module.exports = function (file, length, codec, cache) {
     },
   }
 }
-
-
-
-
-
-
-
-
 
