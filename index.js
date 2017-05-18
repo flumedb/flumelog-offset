@@ -7,22 +7,7 @@ var Append = require('append-batch')
 var Blocks = require('aligned-block-file')
 var isInteger = Number.isInteger
 var ltgt = require('ltgt')
-
-function frame (data) {
-  var length = data.reduce(function (total, value) { return total + value.length }, 0)
-  var b = new Buffer(length + data.length * 8)
-  var offset = 0
-  for(var i = 0; i < data.length; i++) {
-    var buf = data[i]
-    //mutate the items
-    //var buf = item.value
-    b.writeUInt32BE(buf.length, 0 + offset) //start
-    b.writeUInt32BE(buf.length, 4+buf.length + offset) //end
-    buf.copy(b, 4 + offset, 0, buf.length)
-    offset += buf.length + 8
-  }
-  return b
-}
+var createFrame = require('./frame/basic')
 
 function format (seqs, values, seq, value, cursor) {
   return (
@@ -43,7 +28,10 @@ module.exports = function (file, length, codec, cache) {
   if(!codec) codec = id_codec
   var since = Obv()
   length = length || 1024
+
+
   var blocks = Blocks(file, length, 'a+', cache)
+  var frame = createFrame(blocks, codec)
 
   var since = Obv()
   var offset = blocks.offset
@@ -53,7 +41,7 @@ module.exports = function (file, length, codec, cache) {
       batch = batch.map(codec.encode).map(function (e) {
         return Buffer.isBuffer(e) ? e : new Buffer(e)
       })
-      blocks.append(frame(batch), function (err) {
+      blocks.append(frame.frame(batch), function (err) {
         if(err) return cb(err)
         //else, get offset of last item.
         since.set(blocks.offset.value - (batch[batch.length - 1].length + 8))
@@ -62,11 +50,17 @@ module.exports = function (file, length, codec, cache) {
     })
   })
 
-  offset.once(function (offset) {
-    if(offset === 0) return since.set(-1)
-    log.getPrevious(offset, function (err, value, length) {
-      since.set(offset - length)
-    })
+//  offset.once(function (offset) {
+//    if(offset === 0) return since.set(-1)
+//    log.getPrevious(offset, function (err, value, length) {
+//      since.set(offset - length)
+//    })
+//  })
+//
+
+  frame.restore(function (err, offset) {
+    if(err) throw err
+    since.set(offset)
   })
 
   var log
@@ -173,6 +167,8 @@ module.exports = function (file, length, codec, cache) {
       }
     },
 
+//    stream: function (
+
     //if value is an array of buffers, then treat that as a batch.
     append: append,
 
@@ -241,4 +237,7 @@ module.exports = function (file, length, codec, cache) {
     },
   }
 }
+
+
+
 
