@@ -22,7 +22,7 @@ module.exports = function (blocks, codec) {
       blocks.readUInt32BE(0, function (err, length) {
         if(err) return cb(err)
         blocks.read(4, 4+length, function (err, value) {
-          cb(err, value, null, 4+length+4)
+          cb(err, value, -1, 4+length+4)
         })
       })
     else
@@ -35,7 +35,7 @@ module.exports = function (blocks, codec) {
         //so will be just a mem read.
         blocks.readUInt32BE(offset - 4, function (err, prev_len) {
           if(err) return cb(err)
-          blocks.read(offset+4, offset+4+length, function (err, value) {
+          blocks.read(offset+4, offset+4+len, function (err, value) {
             cb(err, value, offset-(4+prev_len+4), offset+(4+len+4))
           })
         })
