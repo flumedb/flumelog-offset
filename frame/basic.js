@@ -1,3 +1,7 @@
+/*
+<length><data><length>
+
+*/
 module.exports = function (blocks, codec) {
 
   function frame (data, _offset) {
@@ -11,8 +15,12 @@ module.exports = function (blocks, codec) {
       b.writeUInt32BE(buf.length, 0 + offset) //start
       b.writeUInt32BE(buf.length, 4+buf.length + offset) //end
       buf.copy(b, 4 + offset, 0, buf.length)
+      //remember the offset of the _last_ item
+      //this is for framings starting at the first byte.
+      frame.offset = _offset + offset
       offset += buf.length + 8
     }
+
     return b
   }
 
@@ -73,13 +81,4 @@ module.exports = function (blocks, codec) {
     restore: restore
   }
 }
-
-
-
-
-
-
-
-
-
 
