@@ -32,12 +32,10 @@ module.exports = function (blocks, codec) {
       else
         blocks.readUInt32BE(offset - 8, function (err, prev_len) {
           if(err) return cb(err)
-          console.log('prev?', prev_len, offset)
           next(offset+4, offset+4+len, offset-(prev_len+12), offset+(len+12))
         })
 
       function next (start, end, prev, next) {
-        console.log('read', start, end, prev, next)
         blocks.read(start, end, function (err, value) {
           cb(err, value, prev, next)
         })
@@ -52,15 +50,12 @@ module.exports = function (blocks, codec) {
       var end = offset //the very end of the file!
       var again = Looper(function () {
         blocks.readUInt32BE(end-4, function (err, _end) {
-          if(_end < end*2)
-            console.log('end?', _end, end)
           if(_end != end) {
             if((--end) >= 0) again()
             //completely corrupted file!
             else blocks.truncate(0, next)
           }
           else {
-            console.log('VALID END', end, offset)
             if(end != offset)
               blocks.truncate(end-4, next)
             else
@@ -83,5 +78,4 @@ module.exports = function (blocks, codec) {
     frame: frame, getMeta: getMeta, restore: restore
   }
 }
-
 
