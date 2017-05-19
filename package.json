@@ -8,11 +8,12 @@
     "url": "git://github.com/flumedb/flumelog-offset.git"
   },
   "dependencies": {
-    "aligned-block-file": "^0.1.3",
+    "aligned-block-file": "^1.0.0",
     "append-batch": "^0.0.1",
     "explain-error": "^1.0.3",
+    "looper": "^4.0.0",
     "ltgt": "^2.1.3",
-    "pull-cursor": "^2.1.1"
+    "pull-cursor": "^2.1.2"
   },
   "devDependencies": {
     "bench-flumelog": "^1.0.1",
