@@ -7,21 +7,21 @@ var Append = require('append-batch')
 var Blocks = require('aligned-block-file')
 var isInteger = Number.isInteger
 var ltgt = require('ltgt')
-var createFrame = require('./frame/basic')
+//var createFrame = require('./frame/basic')
+var createFrame = require('./frame/recoverable')
 var createStreamCreator = require('pull-cursor')
 var Map = require('pull-stream/throughs/map')
 
 function id (v) { return v }
 var id_codec = {encode: id, decode: id}
 
-module.exports = function (file, length, codec, cache) {
+module.exports = function (file, length, codec, cache, frame) {
   if(!codec) codec = id_codec
   var since = Obv()
   length = length || 1024
 
-
   var blocks = Blocks(file, length, 'a+', cache)
-  var frame = createFrame(blocks, codec)
+  frame = createFrame(blocks, codec)
 
   var since = Obv()
   var offset = blocks.offset
@@ -31,10 +31,12 @@ module.exports = function (file, length, codec, cache) {
       batch = batch.map(codec.encode).map(function (e) {
         return Buffer.isBuffer(e) ? e : new Buffer(e)
       })
-      blocks.append(frame.frame(batch), function (err) {
+      var framed = frame.frame(batch, blocks.offset.value)
+      var _since = frame.frame.offset
+      blocks.append(framed, function (err, offset) {
         if(err) return cb(err)
         //else, get offset of last item.
-        since.set(blocks.offset.value - (batch[batch.length - 1].length + 8))
+        since.set(_since)
         cb(null, since.value)
       })
     })
