@@ -11,10 +11,8 @@ var createStreamCreator = require('pull-cursor')
 var Map = require('pull-stream/throughs/map')
 
 function id (v) { return v }
-var id_codec = {encode: id, decode: id}
 
 module.exports = function (blocks, frame, codec, file) {
-  if(!codec) codec = id_codec
   var since = Obv()
 
   var offset = blocks.offset
