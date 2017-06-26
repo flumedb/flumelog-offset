@@ -14,6 +14,7 @@
     "hashlru": "^2.2.0",
     "looper": "^4.0.0",
     "ltgt": "^2.1.3",
+    "obv": "0.0.1",
     "pull-cursor": "^2.1.2"
   },
   "devDependencies": {

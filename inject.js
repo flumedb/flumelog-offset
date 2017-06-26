@@ -4,13 +4,8 @@ var fs = require('fs')
 var isBuffer = Buffer.isBuffer
 var Obv = require('obv')
 var Append = require('append-batch')
-var isInteger = Number.isInteger
-var ltgt = require('ltgt')
-//var createFrame = require('./frame/basic')
 var createStreamCreator = require('pull-cursor')
 var Map = require('pull-stream/throughs/map')
-
-function id (v) { return v }
 
 module.exports = function (blocks, frame, codec, file) {
   var since = Obv()
@@ -33,7 +28,7 @@ module.exports = function (blocks, frame, codec, file) {
     })
   })
 
-  var createStream = require('pull-cursor')(since, frame.getMeta)
+  var createStream = createStreamCreator(since, frame.getMeta)
 
   frame.restore(function (err, offset) {
     if(err) throw err
