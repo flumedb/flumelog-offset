@@ -44,9 +44,7 @@ module.exports = function (blocks, frame, codec, file) {
       //im not sure about doing encodings like this. seems haphazard.
       return Map(function (data) {
         if(Buffer.isBuffer(data)) return codec.decode(data)
-        else if('object' === typeof data)
-          data.value = codec.decode(data.value)
-
+        else if('object' === typeof data) data.value = codec.decode(data.value)
         return data
       })
       (createStream(opts))

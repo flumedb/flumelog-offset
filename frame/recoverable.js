@@ -1,6 +1,6 @@
 'use strict'
 var Looper = require('looper')
-module.exports = function (blocks, codec) {
+module.exports = function (blocks) {
 
   function frame(data, start) {
     var _start = start
@@ -67,7 +67,6 @@ module.exports = function (blocks, codec) {
       function next () {
         blocks.readUInt32BE(end-8, function (err, length) {
           if(err) cb(err)
-          
           else cb(null, end-(length+12)) //start of the last record
         })
       }
