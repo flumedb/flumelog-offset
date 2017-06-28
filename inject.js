@@ -35,8 +35,7 @@ module.exports = function (blocks, frame, codec, file) {
     since.set(offset)
   })
 
-  var log
-  return log = {
+  return {
     filename: file,
     since: since,
     stream: function (opts) {

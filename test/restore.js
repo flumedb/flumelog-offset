@@ -12,7 +12,7 @@ while(n--)
   ary.push(crypto.randomBytes(17))
 
 tape('setup', function (t) {
-  var log = OffsetLog(file, 23)
+  var log = OffsetLog(file, {blockSize: 23})
 
 
   log.since.once(function (value) {
@@ -42,7 +42,7 @@ tape('setup', function (t) {
 
 tape('restore, valid', function (t) {
 
-  var log = OffsetLog(file, 23)
+  var log = OffsetLog(file, {blockSize: 23})
 
   log.since(function (v) {
     t.equal(v, since)
@@ -69,7 +69,7 @@ tape('truncate', function (t) {
 
 
 tape('restore', function (t) {
-var log = OffsetLog(file, 23)
+  var log = OffsetLog(file, {blockSize: 23})
   log.since.once(function (v) {
     t.ok(v < since)
     t.ok(v > 0)

@@ -5,7 +5,7 @@ var Offset = require('../')
 
 
 var file = '/tmp/offset-test_'+Date.now()+'.log'
-var db = Offset(file, 16)
+var db = Offset(file, {blockSize: 16})
 var live = []
 
 pull(
@@ -98,7 +98,7 @@ tape('reverse', function (t) {
 
 tape('append batch', function (t) {
   var file = '/tmp/offset-test_2_'+Date.now()+'.log'
-  var db = Offset(file, 16)
+  var db = Offset(file, {blockSize: 16})
 
   db.append([
     new Buffer('hello world'),
@@ -114,7 +114,7 @@ tape('append batch', function (t) {
 
 tape('stream in empty database', function (t) {
   var file = '/tmp/offset-test_3_'+Date.now()+'.log'
-  var db = Offset(file, 16)
+  var db = Offset(file, {blockSize: 16})
 
 //  db.append([
 //    new Buffer('hello world'),
@@ -144,7 +144,7 @@ tape('stream in empty database', function (t) {
 
 tape('stream in before append cb', function (t) {
   var file = '/tmp/offset-test_4_'+Date.now()+'.log'
-  var db = Offset(file, 16)
+  var db = Offset(file, {blockSize: 16})
 
 //  db.append([
 //    new Buffer('hello world'),

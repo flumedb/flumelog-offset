@@ -2,7 +2,7 @@ var Log = require('../')
 var pull = require('pull-stream')
 var tape = require('tape')
 
-var log = Log('/tmp/test_offset-log_'+Date.now(), 1024)
+var log = Log('/tmp/test_offset-log_'+Date.now(), {blockSize: 1024})
 
 function encode (obj) {
   return new Buffer(JSON.stringify(obj))

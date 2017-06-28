@@ -17,13 +17,25 @@ var OffsetLog = require('flumelog-offset')
 var codec = require('flumecodec')
 var Flume = require('flumedb')
 
-var db = Flume(OffsetLog(filename, codec.json))
+var db = Flume(OffsetLog(filename, {codec: codec.json}))
   .use(...) //also add some flumeviews
 
 db.append({greets: 'hello!'}, function (cb) {
 
 })
 
+```
+
+## Options
+
+```
+var OffsetLog = require('flumelog-offset')
+var log = OffsetLog('/data/log', {
+  blockSize: 1024,        // default is 1024*16
+  codec: {encode, decode} // defaults to a json codec
+  flags: 'r',             // default is 'a+',
+  cache: {set, get}       // default is require('hashlru')(1024)
+})
 ```
 
 ## legacy
