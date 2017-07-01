@@ -7,7 +7,7 @@ function isNumber(n) { return 'number' == typeof n && !isNaN(n) }
 
 module.exports = function (file, opts) {
   if (!opts) opts = {}
-  if (typeof opts !== 'object') legacy(opts, arguments[2])
+  if (typeof opts !== 'object' || opts.decode) legacy(opts, arguments[2])
 
   var blockSize = opts.blockSize || 1024*16
   var codec = opts.codec || {encode: id, decode: id}
