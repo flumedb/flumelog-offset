@@ -7,7 +7,8 @@ function isNumber(n) { return 'number' == typeof n && !isNaN(n) }
 
 module.exports = function (file, opts) {
   if (!opts) opts = {}
-  if (typeof opts !== 'object') legacy(opts, arguments[2])
+  //file, blocks, frame, codec
+  if (typeof opts !== 'object') legacy.apply(null, arguments)
 
   var blockSize = opts.blockSize || 1024*16
   var codec = opts.codec || {encode: id, decode: id}
@@ -26,3 +27,4 @@ function legacy (blockSize, codec) {
   if (!isNumber(blockSize)) codec = blockSize, blockSize = undefined
   return {blockSize: blockSize, codec: codec}
 }
+
