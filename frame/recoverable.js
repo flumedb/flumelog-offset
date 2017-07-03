@@ -1,20 +1,22 @@
 'use strict'
 var Looper = require('looper')
-module.exports = function (blocks) {
+
+module.exports = function (blocks, blockSize, filesizeCodec) {
+  var fsw = filesizeCodec.byteWidth
 
   function frame(data, start) {
     var _start = start
     var length = data.reduce(function (total, value) { return total + value.length }, 0)
-    var b = new Buffer(length + data.length * 12)
+    var b = new Buffer(length + data.length * (8+fsw))
     var offset = 0
     for(var i = 0; i < data.length; i++) {
       var buf = data[i]
       b.writeUInt32BE(buf.length, 0 + offset) //start
       buf.copy(b, 4+offset, 0, buf.length)
       b.writeUInt32BE(buf.length, 4+buf.length + offset) //end
-      b.writeUInt32BE(start+=buf.length+12, 8+buf.length + offset) //length of the file, if valid
+      filesizeCodec.encode(b, start+=buf.length+(8+fsw), 8+buf.length + offset) //length of the file, if valid
       frame.offset = _start + offset
-      offset += buf.length + 12
+      offset += buf.length + (8 + fsw)
     }
     return b
   }
@@ -28,11 +30,11 @@ module.exports = function (blocks) {
       //two blocks, this will already be in the cache,
       //so will be just a mem read.
       if(offset === 0)
-        next(4, 4+len, -1, (4+len+8))
+        next(4, 4+len, -1, (fsw+len+8))
       else
-        blocks.readUInt32BE(offset - 8, function (err, prev_len) {
+        blocks.readUInt32BE(offset - (4+fsw), function (err, prev_len) {
           if(err) return cb(err)
-          next(offset+4, offset+4+len, offset-(prev_len+12), offset+(len+12))
+          next(offset+4, offset+4+len, offset-(prev_len+8+fsw), offset+(len+8+fsw))
         })
 
       function next (start, end, prev, next) {
@@ -49,7 +51,7 @@ module.exports = function (blocks) {
 
       var end = offset //the very end of the file!
       var again = Looper(function () {
-        blocks.readUInt32BE(end-4, function (err, _end) {
+        filesizeCodec.decode(blocks, end-fsw, function (err, _end) {
           if(_end != end) {
             if((--end) >= 0) again()
             //completely corrupted file!
@@ -57,7 +59,7 @@ module.exports = function (blocks) {
           }
           else {
             if(end != offset)
-              blocks.truncate(end-4, next)
+              blocks.truncate(end-fsw, next)
             else
               next()
           }
@@ -65,9 +67,9 @@ module.exports = function (blocks) {
       })
       again()
       function next () {
-        blocks.readUInt32BE(end-8, function (err, length) {
+        blocks.readUInt32BE(end-(4+fsw), function (err, length) {
           if(err) cb(err)
-          else cb(null, end-(length+12)) //start of the last record
+          else cb(null, end-(length+8+fsw)) //start of the last record
         })
       }
     })

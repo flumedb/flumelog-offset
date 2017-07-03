@@ -1,5 +1,6 @@
 var Blocks = require('aligned-block-file')
 var createFrame = require('./frame/recoverable')
+var filesizeCodecs = require('./frame/filesizecodecs.js')
 var Cache = require('hashlru')
 var inject = require('./inject')
 function id (e) { return e }
@@ -14,9 +15,10 @@ module.exports = function (file, opts) {
   var codec = opts.codec || {encode: id, decode: id}
   var flags = opts.flags || 'a+'
   var cache = opts.cache || Cache(1024)
+  var filesizeCodec = opts.filesizeCodec || filesizeCodecs.UInt32BE
 
   var blocks = Blocks(file, blockSize, flags, cache)
-  var frame = createFrame(blocks, blockSize)
+  var frame = createFrame(blocks, blockSize, filesizeCodec)
   return inject(blocks, frame, codec, file)
 }
 
