@@ -1,7 +1,13 @@
 'use strict'
 var Looper = require('looper')
+var filesizeCodecs = require('./filesizecodecs')
 
 module.exports = function (blocks, blockSize, filesizeCodec) {
+  if (typeof filesizeCodec === 'number') {
+    filesizeCodec = filesizeCodecs[filesizeCodec]
+    if (!filesizeCodec) throw Error('Invalid number of bits for filesize')
+  }
+  filesizeCodec = filesizeCodec || filesizeCodecs[32]
   var fsw = filesizeCodec.byteWidth
 
   function frame(data, start) {
