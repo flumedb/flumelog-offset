@@ -8,7 +8,10 @@ module.exports = {
     encode: function(buf, value, offset) {
       buf.writeUInt32BE(value, offset)
     },
-    decode: function(blocks, offset, cb) {
+    decode: function(buf, offset) {
+      return buf.readUInt32BE(offset)
+    },
+    decodeAsync: function(blocks, offset, cb) {
       blocks.readUInt32BE(offset, cb) 
     }
   },
@@ -17,7 +20,10 @@ module.exports = {
     encode: function(buf, value, offset) {
       uint48be.encode(value, buf, offset)
     },
-    decode: function(blocks, offset, cb) {
+    decode: function(buf, offset) {
+      return uint48be.decode(buf, offset)
+    },
+    decodeAsync: function(blocks, offset, cb) {
       blocks.readUInt48BE(offset, cb) 
     }
   },
@@ -26,7 +32,10 @@ module.exports = {
     encode: function(buf, value, offset) {
       int53.writeUInt64BE(value, buf, offset)
     },
-    decode: function(blocks, offset, cb) {
+    decode: function(buf, offset) {
+      return int53.readUInt64BE(buf, offset)
+    },
+    decodeAsync: function(blocks, offset, cb) {
       blocks.readUInt64BE(offset, cb)
     }
   }

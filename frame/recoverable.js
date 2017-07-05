@@ -57,7 +57,7 @@ module.exports = function (blocks, blockSize, filesizeCodec) {
 
       var end = offset //the very end of the file!
       var again = Looper(function () {
-        filesizeCodec.decode(blocks, end-fsw, function (err, _end) {
+        filesizeCodec.decodeAsync(blocks, end-fsw, function (err, _end) {
           if(_end != end) {
             if((--end) >= 0) again()
             //completely corrupted file!
