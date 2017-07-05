@@ -1,20 +1,31 @@
-
+var pull = require('pull-stream')
 var create = require('../')
-require('test-flumelog')(function () {
+var testLog = require('test-flumelog')
 
-  return create('/tmp/test_flumelog-offset_'+Date.now(), {
-    blockSize: 1024,
-    codec: {
-      encode: function (v) {
-        return new Buffer(JSON.stringify(v))
-      },
-      decode: function (v) {
-        return JSON.parse(v)
-      },
-      buffer: false
-    }
+function test(name, opts, cb) {
+  testLog(function () {
+    return create('/tmp/test_flumelog-offset_'+Date.now(), Object.assign({
+      blockSize: 1024,
+      codec: {
+        encode: function (v) {
+          return new Buffer(JSON.stringify(v))
+        },
+        decode: function (v) {
+          return JSON.parse(v)
+        },
+        buffer: false
+      }
+    }, opts))
+  }, function () {
+    console.log(name + ' done')
+    cb()
   })
+}
 
-}, function () {
-  console.log('done')
-})
+pull(
+  pull.values([32,48,53]),
+  pull.asyncMap( function(bits, cb) {
+    test(bits+'bit', {bits: 32}, cb)
+  }),
+  pull.drain()
+)
