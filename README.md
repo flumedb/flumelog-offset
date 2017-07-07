@@ -35,6 +35,11 @@ var log = OffsetLog('/data/log', {
   codec: {encode, decode} // defaults to a json codec
   flags: 'r',             // default is 'a+',
   cache: {set, get}       // default is require('hashlru')(1024)
+  offsetCodec: {          // default is require('./frame/offset-codecs')[32]
+    byteWidth,            // with the default offset-codec, the file can have
+    encode,               // a size of 4GB max.
+    decodeAsync
+  }
 })
 ```
 
@@ -63,7 +68,7 @@ of the start of a record is the primary key (`offset`).
 offset-><data.length (UInt32BE)>
         <data ...>
         <data.length (UInt32BE)>
-        <file_length (UInt32BE)>
+        <file_length (UInt32BE or Uint48BE or Uint53BE)>
 ```
 by writing the length of the data both before and after each record
 it becomes possible to scan forward and backward (like a doubly linked list)
