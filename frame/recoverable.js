@@ -1,14 +1,14 @@
 'use strict'
 var Looper = require('looper')
-var filesizeCodecs = require('./filesizecodecs')
+var offsetCodecs = require('./offset-codecs')
 
-module.exports = function (blocks, blockSize, filesizeCodec) {
-  if (typeof filesizeCodec === 'number') {
-    filesizeCodec = filesizeCodecs[filesizeCodec]
-    if (!filesizeCodec) throw Error('Invalid number of bits for filesize')
+module.exports = function (blocks, blockSize, offsetCodec) {
+  if (typeof offsetCodec === 'number') {
+    offsetCodec = offsetCodecs[offsetCodec]
+    if (!offsetCodec) throw Error('Invalid number of bits to encode file offsets. Must be one of ' + Object.keys(offsetCodecs).join(' '))
   }
-  filesizeCodec = filesizeCodec || filesizeCodecs[32]
-  var fsw = filesizeCodec.byteWidth
+  offsetCodec = offsetCodec || offsetCodecs[32]
+  var fsw = offsetCodec.byteWidth
 
   function frame(data, start) {
     var _start = start
@@ -20,7 +20,7 @@ module.exports = function (blocks, blockSize, filesizeCodec) {
       b.writeUInt32BE(buf.length, 0 + offset) //start
       buf.copy(b, 4+offset, 0, buf.length)
       b.writeUInt32BE(buf.length, 4+buf.length + offset) //end
-      filesizeCodec.encode(b, start+=buf.length+(8+fsw), 8+buf.length + offset) //length of the file, if valid
+      offsetCodec.encode(b, start+=buf.length+(8+fsw), 8+buf.length + offset) //length of the file, if valid
       frame.offset = _start + offset
       offset += buf.length + (8 + fsw)
     }
@@ -57,7 +57,7 @@ module.exports = function (blocks, blockSize, filesizeCodec) {
 
       var end = offset //the very end of the file!
       var again = Looper(function () {
-        filesizeCodec.decodeAsync(blocks, end-fsw, function (err, _end) {
+        offsetCodec.decodeAsync(blocks, end-fsw, function (err, _end) {
           if(_end != end) {
             if((--end) >= 0) again()
             //completely corrupted file!

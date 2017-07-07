@@ -4,12 +4,12 @@ var tape = require('tape')
 var crypto = require('crypto')
 var OffsetLog = require('../')
 var pull = require('pull-stream')
-var filesizeCodecs = require('../frame/filesizecodecs')
+var offsetCodecs = require('../frame/offset-codecs')
 
 tape('Create, break and restore', function(t) {
-  test(t, '32bit', {bits: filesizeCodecs[32]})
-  test(t, '48bit', {bits: filesizeCodecs[48]})
-  test(t, '53bit', {bits: filesizeCodecs[53]})
+  test(t, '32bit', {offsetCodec: offsetCodecs[32]})
+  test(t, '48bit', {offsetCodec: offsetCodecs[48]})
+  test(t, '53bit', {offsetCodec: offsetCodecs[53]})
 })
 
 function test(t, name, opts) {
@@ -61,7 +61,7 @@ function test(t, name, opts) {
       if(err) throw err
       fs.readFile(file, function (err, buf) {
         if(err) throw err
-        var offset = opts.bits.decode(buf, buf.length - opts.bits.byteWidth)
+        var offset = opts.offsetCodec.decode(buf, buf.length - opts.offsetCodec.byteWidth)
         var slice = stat.size - ~~(ary[ary.length-1].length/2)
         console.log('slice at:', slice)
         fs.truncate(file, slice, function (err) {
