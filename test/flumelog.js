@@ -23,9 +23,9 @@ function test(name, opts, cb) {
 }
 
 pull(
-  pull.values([32,48,53]),
+  pull.values([32, 48, 53]),
   pull.asyncMap( function(bits, cb) {
-    test(bits+'bit', {bits: 32}, cb)
+    test(bits + 'bit', {offsetCodec: bits}, cb)
   }),
   pull.drain()
 )
