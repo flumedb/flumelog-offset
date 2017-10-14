@@ -74,12 +74,13 @@ function test(t, name, opts) {
   })
 
 
+  var end = null
   t.test(name + ' restore', function (t) {
     var log = OffsetLog(file, Object.assign({blockSize: 23}, opts))
     log.since.once(function (v) {
       t.ok(v < since)
       t.ok(v > 0)
-
+      end = v
       pull(
         log.stream(),
         pull.collect(function (err, _ary) {
@@ -92,7 +93,18 @@ function test(t, name, opts) {
 
     })
   })
+
+
+  t.test(name = ' restore, again', function (t) {
+    var log = OffsetLog(file, Object.assign({blockSize: 23}, opts))
+    log.since.once(function (v) {
+      t.equal(v, end)
+      t.end()
+    })
+  })
+
 }
+
 
 
 
