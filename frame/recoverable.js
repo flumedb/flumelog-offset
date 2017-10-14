@@ -57,7 +57,6 @@ module.exports = function (blocks, blockSize, offsetCodec) {
       
       var end = offset //the very end of the file!
       var again = Looper(function () {
-        console.log(end)
         offsetCodec.decodeAsync(blocks, end-fsw, function (err, _end) {
           if(_end != end) {
             if((--end) >= 0) again()
@@ -86,4 +85,5 @@ module.exports = function (blocks, blockSize, offsetCodec) {
     frame: frame, getMeta: getMeta, restore: restore
   }
 }
+
 
