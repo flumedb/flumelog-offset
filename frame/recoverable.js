@@ -54,9 +54,10 @@ module.exports = function (blocks, blockSize, offsetCodec) {
   function restore (cb) {
     blocks.offset.once(function (offset) {
       if(offset === 0) return cb(null, -1) //the file is just empty!
-
+      
       var end = offset //the very end of the file!
       var again = Looper(function () {
+        console.log(end)
         offsetCodec.decodeAsync(blocks, end-fsw, function (err, _end) {
           if(_end != end) {
             if((--end) >= 0) again()
@@ -64,9 +65,9 @@ module.exports = function (blocks, blockSize, offsetCodec) {
             else blocks.truncate(0, next)
           }
           else {
-            if(end != offset)
-              blocks.truncate(end-fsw, next)
-            else
+            if(end != offset) {
+              blocks.truncate(end, next)
+            } else
               next()
           }
         })
