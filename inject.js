@@ -6,6 +6,7 @@ var Obv = require('obv')
 var Append = require('append-batch')
 var createStreamCreator = require('pull-cursor')
 var Map = require('pull-stream/throughs/map')
+var Looper = require('pull-looper')
 
 module.exports = function (blocks, frame, codec, file) {
   var since = Obv()
@@ -41,12 +42,12 @@ module.exports = function (blocks, frame, codec, file) {
     stream: function (opts) {
       //note, this syntax means we don't need to import pull-stream.
       //im not sure about doing encodings like this. seems haphazard.
-      return Map(function (data) {
+      return Looper(Map(function (data) {
         if(Buffer.isBuffer(data)) return codec.decode(data)
         else if('object' === typeof data) data.value = codec.decode(data.value)
         return data
       })
-      (createStream(opts))
+      (createStream(opts)))
     },
 
     //if value is an array of buffers, then treat that as a batch.
