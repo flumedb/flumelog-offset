@@ -21,7 +21,7 @@
     "uint48be": "^1.0.1"
   },
   "devDependencies": {
-    "bench-flumelog": "^1.0.1",
+    "bench-flumelog": "^1.1.0",
     "flumecodec": "0.0.0",
     "interleavings": "^0.3.1",
     "pull-paramap": "^1.2.0",
