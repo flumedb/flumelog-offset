@@ -17,6 +17,7 @@
     "ltgt": "^2.1.3",
     "obv": "0.0.1",
     "pull-cursor": "^2.1.2",
+    "pull-looper": "^1.0.0",
     "uint48be": "^1.0.1"
   },
   "devDependencies": {

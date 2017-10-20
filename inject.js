@@ -6,11 +6,12 @@ var Obv = require('obv')
 var Append = require('append-batch')
 var createStreamCreator = require('pull-cursor')
 var Map = require('pull-stream/throughs/map')
+var Cache = require('hashlru')
 var Looper = require('pull-looper')
 
-module.exports = function (blocks, frame, codec, file) {
+module.exports = function (blocks, frame, codec, file, cache) {
   var since = Obv()
-
+  cache = cache || Cache(256)
   var offset = blocks.offset
 
   var append = Append(function (batch, cb) {
@@ -29,7 +30,34 @@ module.exports = function (blocks, frame, codec, file) {
     })
   })
 
-  var createStream = createStreamCreator(since, frame.getMeta)
+  var k = 0
+  function async (fn) {
+    fn()
+//    if(k++%100) fn()
+//    else setImmediate(fn)
+  }
+
+  function getMeta (offset, cb) {
+ //   async(function () {
+    var data = cache.get(offset)
+    if(data) cb(null, data.value, data.prev, data.next)
+    else
+      frame.getMeta(offset, function (err, value, prev, next) {
+        if(err) return cb(err)
+
+        var data = {
+          value: codec.decode(value),
+          prev: prev,
+          next: next
+        }
+
+        cache.set(offset, data)
+        cb(null, data.value, data.prev, data.next)
+      })
+    //})
+  }
+
+  var createStream = createStreamCreator(since, getMeta)
 
   frame.restore(function (err, offset) {
     if(err) throw err
@@ -40,14 +68,7 @@ module.exports = function (blocks, frame, codec, file) {
     filename: file,
     since: since,
     stream: function (opts) {
-      //note, this syntax means we don't need to import pull-stream.
-      //im not sure about doing encodings like this. seems haphazard.
-      return Looper(Map(function (data) {
-        if(Buffer.isBuffer(data)) return codec.decode(data)
-        else if('object' === typeof data) data.value = codec.decode(data.value)
-        return data
-      })
-      (createStream(opts)))
+      return Looper(createStream(opts))
     },
 
     //if value is an array of buffers, then treat that as a batch.
