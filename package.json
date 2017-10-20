@@ -1,7 +1,7 @@
 {
   "name": "flumelog-offset",
   "description": "a flumelog based on offset into a file",
-  "version": "3.2.5",
+  "version": "3.2.6",
   "homepage": "https://github.com/flumedb/flumelog-offset",
   "repository": {
     "type": "git",
