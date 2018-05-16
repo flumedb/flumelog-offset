@@ -5,7 +5,6 @@ var isBuffer = Buffer.isBuffer
 var Obv = require('obv')
 var Append = require('append-batch')
 var createStreamCreator = require('pull-cursor')
-var Map = require('pull-stream/throughs/map')
 var Cache = require('hashlru')
 var Looper = require('pull-looper')
 
