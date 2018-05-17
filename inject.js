@@ -29,15 +29,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
     })
   })
 
-  var k = 0
-  function async (fn) {
-    fn()
-//    if(k++%100) fn()
-//    else setImmediate(fn)
-  }
-
   function getMeta (offset, cb) {
- //   async(function () {
     var data = cache.get(offset)
     if(data) cb(null, data.value, data.prev, data.next)
     else
@@ -53,7 +45,6 @@ module.exports = function (blocks, frame, codec, file, cache) {
         cache.set(offset, data)
         cb(null, data.value, data.prev, data.next)
       })
-    //})
   }
 
   var createStream = createStreamCreator(since, getMeta)
@@ -81,4 +72,6 @@ module.exports = function (blocks, frame, codec, file, cache) {
     }
   }
 }
+
+
 
