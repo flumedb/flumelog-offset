@@ -30,34 +30,31 @@ module.exports = function (blocks, frame, codec, file, cache) {
   })
 
   function getMeta (offset, cb) {
-    return getMetaHelper(offset, true, cb)
+    var data = cache.get(offset)
+    if (data) {
+      cb(null, data.value, data.prev, data.next)
+    }
+    else {
+      frame.getMeta(offset, function (err, value, prev, next) {
+        if(err) return cb(err)
+
+        var data = {
+          value: codec.decode(value),
+          prev: prev,
+          next: next
+        }
+
+        cache.set(offset, data)
+        cb(null, data.value, data.prev, data.next)
+      })
+    }
   }
 
   function getMetaNoCache (offset, cb) {
-    return getMetaHelper(offset, false, cb)
-  }
-
-  function getMetaHelper (offset, useCache, cb) {
-    if (useCache) {
-      var data = cache.get(offset)
-      if (data) {
-        cb(null, data.value, data.prev, data.next)
-        return
-      }
-    }
-
     frame.getMeta(offset, function (err, value, prev, next) {
       if(err) return cb(err)
 
-      var data = {
-        value: codec.decode(value),
-        prev: prev,
-        next: next
-      }
-
-      if (useCache)
-        cache.set(offset, data)
-      cb(null, data.value, data.prev, data.next)
+      cb(null, codec.decode(value), prev, next)
     })
   }
 
