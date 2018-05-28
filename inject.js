@@ -29,37 +29,31 @@ module.exports = function (blocks, frame, codec, file, cache) {
     })
   })
 
-  function getMeta (offset, cb) {
-    var data = cache.get(offset)
-    if (data) {
-      cb(null, data.value, data.prev, data.next)
-    }
-    else {
-      frame.getMeta(offset, function (err, value, prev, next) {
-        if(err) return cb(err)
-
-        var data = {
-          value: codec.decode(value),
-          prev: prev,
-          next: next
-        }
-
-        cache.set(offset, data)
+  function getMeta (offset, useCache, cb) {
+    if (useCache) {
+      var data = cache.get(offset)
+      if (data) {
         cb(null, data.value, data.prev, data.next)
-      })
+        return
+      }
     }
-  }
 
-  function getMetaNoCache (offset, cb) {
     frame.getMeta(offset, function (err, value, prev, next) {
       if(err) return cb(err)
 
-      cb(null, codec.decode(value), prev, next)
+      var data = {
+        value: codec.decode(value),
+        prev: prev,
+        next: next
+      }
+
+      if (useCache)
+        cache.set(offset, data)
+      cb(null, data.value, data.prev, data.next)
     })
   }
 
   var createStream = createStreamCreator(since, getMeta)
-  var createStreamNoCache = createStreamCreator(since, getMetaNoCache)
 
   frame.restore(function (err, offset) {
     if(err) throw err
@@ -71,9 +65,6 @@ module.exports = function (blocks, frame, codec, file, cache) {
     since: since,
     stream: function (opts) {
       return Looper(createStream(opts))
-    },
-    streamNoCache: function (opts) {
-      return Looper(createStreamNoCache(opts))
     },
 
     //if value is an array of buffers, then treat that as a batch.
