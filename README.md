@@ -43,6 +43,13 @@ var log = OffsetLog('/data/log', {
 })
 ```
 
+## Block size
+
+The default 16kb is a good compromise between single reader and
+multiple readers performance. If you mostly read from the database
+with a single reader it might be a good idea to increase it to
+something like 256kb. Be sure to check out bench.js on your system.
+
 ## legacy
 
 if you used `flumelog-offset` before 3, and want to read your old
