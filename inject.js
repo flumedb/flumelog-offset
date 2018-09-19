@@ -15,16 +15,18 @@ module.exports = function (blocks, frame, codec, file, cache) {
 
   var append = Append(function (batch, cb) {
     since.once(function () { // wait for file to load before appending...
-      batch = batch.map(codec.encode).map(function (e) {
+      Promise.all(batch.map(codec.encode)).then((b) => {
+        batch = b.map(function (e) {
         return Buffer.isBuffer(e) ? e : new Buffer(e)
-      })
-      var framed = frame.frame(batch, blocks.offset.value)
-      var _since = frame.frame.offset
-      blocks.append(framed, function (err, offset) {
-        if(err) return cb(err)
-        //else, get offset of last item.
-        since.set(_since)
-        cb(null, since.value)
+        })
+        var framed = frame.frame(batch, blocks.offset.value)
+        var _since = frame.frame.offset
+        blocks.append(framed, function (err, offset) {
+          if(err) return cb(err)
+          //else, get offset of last item.
+          since.set(_since)
+          cb(null, since.value)
+        })
       })
     })
   })
@@ -41,15 +43,18 @@ module.exports = function (blocks, frame, codec, file, cache) {
     frame.getMeta(offset, function (err, value, prev, next) {
       if(err) return cb(err)
 
-      var data = {
-        value: codec.decode(value.toString()),
-        prev: prev,
-        next: next
-      }
+      var decoded = codec.decode(value.toString())
+      Promise.resolve(decoded).then(function (resolved) {
+        var data = {
+          value: resolved,
+          prev: prev,
+          next: next
+        }
 
-      if (useCache)
-        cache.set(offset, data)
-      cb(null, data.value, data.prev, data.next)
+        if (useCache)
+          cache.set(offset, data)
+        cb(null, data.value, data.prev, data.next)
+      })
     })
   }
 
@@ -73,7 +78,9 @@ module.exports = function (blocks, frame, codec, file, cache) {
     get: function (offset, cb) {
       frame.getMeta(offset, function (err, value) {
         if(err) cb(err)
-        else cb(null, codec.decode(value))
+        else Promise.resolve(codec.decode(value)).then(function (resolved) {
+          cb(null, resolved)
+        })
       })
     }
   }
