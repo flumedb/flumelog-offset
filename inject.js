@@ -42,7 +42,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
       if(err) return cb(err)
 
       var data = {
-        value: codec.buffer ? codec.decode(value) : codec.decode(value.toString()),
+        value: codec.decode(codec.buffer ? value : value.toString()),
         prev: prev,
         next: next
       }
@@ -78,6 +78,8 @@ module.exports = function (blocks, frame, codec, file, cache) {
     }
   }
 }
+
+
 
 
 
