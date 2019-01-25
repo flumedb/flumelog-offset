@@ -51,6 +51,14 @@ module.exports = function (blocks, blockSize, offsetCodec) {
     })
   }
 
+  const overwriteMeta = (offset, cb) => {
+    blocks.readUInt32BE(offset, function (err, len) {
+      if(err) return cb(err)
+
+      blocks.write(Buffer.alloc(len).fill(0), 4 + offset, cb)
+    })
+  }
+
   function restore (cb) {
     blocks.offset.once(function (offset) {
       if(offset === 0) return cb(null, -1) //the file is just empty!
@@ -82,7 +90,7 @@ module.exports = function (blocks, blockSize, offsetCodec) {
   }
 
   return {
-    frame: frame, getMeta: getMeta, restore: restore
+    frame: frame, getMeta: getMeta, restore: restore, overwriteMeta
   }
 }
 

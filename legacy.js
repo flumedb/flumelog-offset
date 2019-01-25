@@ -10,7 +10,7 @@ module.exports = function (file, block_size, codec) {
     codec = block_size, block_size = 1024*16
   codec = codec || {encode: id, decode: id}
 
-  var blocks = Blocks(file, block_size,'a+', Cache(1024))
+  var blocks = Blocks(file, block_size, null, Cache(1024))
   return inject(
     blocks,
     createFrame(blocks, codec),

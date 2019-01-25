@@ -75,6 +75,9 @@ module.exports = function (blocks, frame, codec, file, cache) {
         if(err) cb(err)
         else cb(null, codec.decode(value))
       })
+    },
+    del: function (offset, cb) {
+      frame.overwriteMeta(offset, cb)
     }
   }
 }

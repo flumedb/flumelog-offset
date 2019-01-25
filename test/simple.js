@@ -4,7 +4,7 @@ var pull = require('pull-stream')
 var Offset = require('../')
 
 
-var file = '/tmp/offset-test_'+Date.now()+'.log'
+var file = '/tmp/offset-test-WORKING_'+Date.now()+'.log'
 var db = Offset(file, {blockSize: 16})
 var live = []
 
@@ -41,7 +41,14 @@ tape('simple', function (t) {
           db.get(offset2, function (err, b2) {
             if(err) throw err
             t.equal(b2.toString(), 'hello offset db')
-            t.end()
+            db.del(offset1, function (err) {
+              t.error(err)
+              db.get(offset1, function (err, b3) {
+                t.error(err)
+                t.notEqual(b3.toString(), 'hello world')
+                t.end()
+              })
+            })
           })
         })
       })
