@@ -76,8 +76,29 @@ module.exports = function (blocks, frame, codec, file, cache) {
         else cb(null, codec.decode(value))
       })
     },
-    del: function (offset, cb) {
-      frame.overwriteMeta(offset, cb)
+    del: function (offsets, cb) {
+      if (Array.isArray(offsets) === false) {
+        // The `seqs` argument may be a single value or an array.
+        // To minimize complexity, this ensures `seqs` is always an array.
+        offsets = [ offsets ]
+      }
+
+      Promise.all(offsets.map(offset =>
+        new Promise((resolve, reject) => {
+          // Simple callback handler for promises.
+          const promiseCb = (err) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve()
+            }
+          }
+
+          cache.remove(offset)
+          frame.overwriteMeta(offset, promiseCb)
+        })
+      )).catch((err) => cb(err))
+        .then(() => cb(null))
     }
   }
 }
