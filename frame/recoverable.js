@@ -53,10 +53,17 @@ module.exports = function (blocks, blockSize, offsetCodec) {
 
   const overwriteMeta = (offset, cb) => {
     blocks.readUInt32BE(offset, function (err, len) {
-      if(err) return cb(err)
-      const b = Buffer.alloc(len)
-      b.write('{}' + ' '.repeat(len-2))
-      blocks.write(b, 4 + offset, cb)
+      if (err) return cb(err)
+
+      const bookend = Buffer.alloc(4)
+      bookend.writeUInt32BE(len, 0)
+
+      const buf = Buffer.alloc(len, ' ')
+      buf.write('{}')
+
+      const full = Buffer.concat([bookend, buf, bookend])
+
+      blocks.write(full, offset, cb)
     })
   }
 
