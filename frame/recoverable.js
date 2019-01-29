@@ -59,7 +59,7 @@ module.exports = function (blocks, blockSize, offsetCodec) {
       bookend.writeUInt32BE(len, 0)
 
       const buf = Buffer.alloc(len, ' ')
-      const skeleton = {
+      const skeleton = JSON.stringify({
         "key": "deleted",
         "value": {
           "previous": "deleted",
@@ -70,8 +70,14 @@ module.exports = function (blocks, blockSize, offsetCodec) {
           "content": "deleted",
           "signature": "deleted"
         }
+      })
+
+      if (len >= skeleton.length) {
+        buf.write(skeleton)
+      } else {
+        buf.write('{}')
       }
-      buf.write(JSON.stringify(skeleton))
+
 
       const full = Buffer.concat([bookend, buf, bookend])
 
