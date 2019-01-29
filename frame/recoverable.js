@@ -59,7 +59,19 @@ module.exports = function (blocks, blockSize, offsetCodec) {
       bookend.writeUInt32BE(len, 0)
 
       const buf = Buffer.alloc(len, ' ')
-      buf.write('{}')
+      const skeleton = {
+        "key": "deleted",
+        "value": {
+          "previous": "deleted",
+          "author": "deleted",
+          "sequence": 0,
+          "timestamp": 0,
+          "hash": "deleted",
+          "content": "deleted",
+          "signature": "deleted"
+        }
+      }
+      buf.write(JSON.stringify(skeleton))
 
       const full = Buffer.concat([bookend, buf, bookend])
 
