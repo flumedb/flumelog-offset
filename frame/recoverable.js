@@ -68,13 +68,15 @@ module.exports = function (blocks, blockSize, offsetCodec) {
           "timestamp": 0,
           "hash": "sha256",
           "content": {},
-          "signature": "deleted"
+          "signature": "00000000000000000000000000000000000000000000.sig.ed25519"
         }
       })
 
       if (len >= skeleton.length) {
         buf.write(skeleton)
       } else {
+        console.log(len)
+        throw new Error('not enough room!')
         buf.write('{}')
       }
 
