@@ -60,14 +60,14 @@ module.exports = function (blocks, blockSize, offsetCodec) {
 
       const buf = Buffer.alloc(len, ' ')
       const skeleton = JSON.stringify({
-        "key": "deleted",
+        "key": "%00000000000000000000000000000000000000000000.sha256",
         "value": {
-          "previous": "deleted",
-          "author": "deleted",
+          "previous": "%00000000000000000000000000000000000000000000.sha256",
+          "author": "@00000000000000000000000000000000000000000000.ed25519",
           "sequence": 0,
           "timestamp": 0,
-          "hash": "deleted",
-          "content": "deleted",
+          "hash": "sha256",
+          "content": {},
           "signature": "deleted"
         }
       })
