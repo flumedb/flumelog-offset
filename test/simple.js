@@ -41,11 +41,10 @@ tape('simple', function (t) {
           db.get(offset2, function (err, b2) {
             if(err) throw err
             t.equal(b2.toString(), 'hello offset db')
-            db.del(offset1, function (err) {
+            db.del(offset2, function (err) {
               t.error(err)
-              db.get(offset1, function (err, b3) {
-                t.error(err)
-                t.equal(b3.toString(), '{}         ')
+              db.get(offset2, function (err, b3) {
+                t.ok(err)
                 t.end()
               })
             })
@@ -80,7 +79,7 @@ tape('stream', function (t) {
     db.stream({min: 0, seqs: false}),
     pull.collect(function (err, ary) {
       if(err) throw err
-      t.deepEqual(ary.map(String), ['{}         ', 'hello offset db'])
+      t.deepEqual(ary.map(String), ['hello world', 'hello offset db'])
       t.end()
     })
   )
@@ -97,7 +96,7 @@ tape('reverse', function (t) {
     db.stream({reverse: true, seqs: false}),
     pull.collect(function (err, ary) {
       console.log(ary, db.since.value)
-      t.deepEqual(ary.map(String), ['hello offset db', '{}         '])
+      t.deepEqual(ary.map(String), ['hello offset db'])
       t.end()
     })
   )

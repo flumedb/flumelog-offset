@@ -94,7 +94,8 @@ module.exports = function (blocks, frame, codec, file, cache) {
             }
           }
 
-          cache.remove(offset)
+          //cache.remove(offset)
+          cache.clear()
           frame.overwriteMeta(offset, promiseCb)
         })
       )).catch((err) => cb(err))
