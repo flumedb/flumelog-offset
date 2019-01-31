@@ -38,7 +38,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
       }
     }
 
-    frame.getMeta(offset, function (err, value, prev, next) {
+    frame.getMetaStream(offset, function (err, value, prev, next) {
       if(err) return cb(err)
 
       var data = {

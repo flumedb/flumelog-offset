@@ -44,8 +44,7 @@ tape('simple', function (t) {
             db.del(offset1, function (err) {
               t.error(err)
               db.get(offset1, function (err, b3) {
-                t.error(err)
-                t.equal(b3.toString(), '{}         ')
+                t.ok(err)
                 t.end()
               })
             })
