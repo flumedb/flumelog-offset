@@ -58,29 +58,7 @@ module.exports = function (blocks, blockSize, offsetCodec) {
       const bookend = Buffer.alloc(4)
       bookend.writeUInt32BE(len, 0)
 
-      const buf = Buffer.alloc(len, ' ')
-      const skeleton = JSON.stringify({
-        "key": "%00000000000000000000000000000000000000000000.sha256",
-        "value": {
-          "previous": "%00000000000000000000000000000000000000000000.sha256",
-          "author": "@00000000000000000000000000000000000000000000.ed25519",
-          "sequence": 0,
-          "timestamp": 0,
-          "hash": "sha256",
-          "content": {},
-          "signature": "00000000000000000000000000000000000000000000.sig.ed25519"
-        }
-      })
-
-      if (len >= skeleton.length) {
-        buf.write(skeleton)
-      } else {
-        console.log(len)
-        throw new Error('not enough room!')
-        buf.write('{}')
-      }
-
-
+      const buf = Buffer.alloc(len)
       const full = Buffer.concat([bookend, buf, bookend])
 
       blocks.write(full, offset, cb)

@@ -7,6 +7,8 @@ var Append = require('append-batch')
 var createStreamCreator = require('pull-cursor')
 var Cache = require('hashlru')
 var Looper = require('pull-looper')
+var pull = require('pull-stream')
+var filter = require('pull-stream/throughs/filter')
 
 module.exports = function (blocks, frame, codec, file, cache) {
   var since = Obv()
@@ -60,11 +62,19 @@ module.exports = function (blocks, frame, codec, file, cache) {
     since.set(offset)
   })
 
+  var isDeleted = (b) => 
+    Buffer.isBuffer(b) === true && b.equals(Buffer.alloc(b.length)) === true
+
+  var isNotDeleted = (b) => isDeleted(b) === false
+
   return {
     filename: file,
     since: since,
     stream: function (opts) {
-      return Looper(createStream(opts))
+      return pull(
+        Looper(createStream(opts)),
+        filter(isNotDeleted)
+      )
     },
 
     //if value is an array of buffers, then treat that as a batch.
@@ -72,8 +82,11 @@ module.exports = function (blocks, frame, codec, file, cache) {
 
     get: function (offset, cb) {
       frame.getMeta(offset, function (err, value) {
-        if(err) cb(err)
-        else cb(null, codec.decode(value))
+        if(err) return cb(err)
+        console.log('valu', value)
+        if (isDeleted(value)) return cb(new Error('item has been deleted'))
+
+        cb(null, codec.decode(value))
       })
     },
     del: function (offsets, cb) {
