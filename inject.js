@@ -31,6 +31,11 @@ module.exports = function (blocks, frame, codec, file, cache) {
     })
   })
 
+  var isDeleted = (b) => 
+    Buffer.isBuffer(b) === true && b.equals(Buffer.alloc(b.length)) === true
+
+  var isNotDeleted = (b) => isDeleted(b) === false
+
   function getMeta (offset, useCache, cb) {
     if (useCache) {
       var data = cache.get(offset)
@@ -42,6 +47,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
 
     frame.getMeta(offset, function (err, value, prev, next) {
       if(err) return cb(err)
+      if (isDeleted(value)) return cb(null, value, prev, next) // skip decode
 
       var data = {
         value: codec.decode(codec.buffer ? value : value.toString()),
@@ -62,10 +68,6 @@ module.exports = function (blocks, frame, codec, file, cache) {
     since.set(offset)
   })
 
-  var isDeleted = (b) => 
-    Buffer.isBuffer(b) === true && b.equals(Buffer.alloc(b.length)) === true
-
-  var isNotDeleted = (b) => isDeleted(b) === false
 
   return {
     filename: file,
@@ -83,7 +85,6 @@ module.exports = function (blocks, frame, codec, file, cache) {
     get: function (offset, cb) {
       frame.getMeta(offset, function (err, value) {
         if(err) return cb(err)
-        console.log('valu', value)
         if (isDeleted(value)) return cb(new Error('item has been deleted'))
 
         cb(null, codec.decode(value))
