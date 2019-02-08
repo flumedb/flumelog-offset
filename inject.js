@@ -34,7 +34,9 @@ module.exports = function (blocks, frame, codec, file, cache) {
   var isDeleted = (b) => 
     Buffer.isBuffer(b) === true && b.equals(Buffer.alloc(b.length)) === true
 
-  var isNotDeleted = (b) => isDeleted(b) === false
+  var isNotDeleted = (b) => {
+    return isDeleted(b) === false
+  }
 
   function getMeta (offset, useCache, cb) {
     if (useCache) {
@@ -75,7 +77,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
     stream: function (opts) {
       return pull(
         Looper(createStream(opts)),
-        filter(isNotDeleted)
+        filter(item => isNotDeleted(item.value))
       )
     },
 
