@@ -94,6 +94,13 @@ module.exports = function (blocks, frame, codec, file, cache) {
         cb(null, codec.decode(value))
       })
     },
+    /**
+     * Overwrite items from the log with null bytes, which are filtered out by
+     * `get()` and `stream()` methods, effectively deleting the database items.
+     *
+     * @param {(number|number[])} offsets - item offset(s) to be deleted
+     * @param {function} cb - the callback that returns operation errors, if any
+     */
     del: (offsets, cb) => {
       if (Array.isArray(offsets) === false) {
         // The `seqs` argument may be a single value or an array.
