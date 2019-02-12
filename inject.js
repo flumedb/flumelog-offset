@@ -1,7 +1,4 @@
 'use strict'
-var fs = require('fs')
-
-var isBuffer = Buffer.isBuffer
 var Obv = require('obv')
 var Append = require('append-batch')
 var createStreamCreator = require('pull-cursor')
@@ -13,7 +10,6 @@ var filter = require('pull-stream/throughs/filter')
 module.exports = function (blocks, frame, codec, file, cache) {
   var since = Obv()
   cache = cache || Cache(256)
-  var offset = blocks.offset
 
   var append = Append(function (batch, cb) {
     since.once(function () { // wait for file to load before appending...

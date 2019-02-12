@@ -18,7 +18,7 @@ pull(
 tape('simple', function (t) {
   t.equal(db.since.value, undefined)
   var offsets = []
-  var rm = db.since(function (_v) {
+  db.since(function (_v) {
     offsets.push(_v)
   })
   db.since.once(function (_v) {
