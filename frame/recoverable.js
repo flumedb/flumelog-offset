@@ -81,8 +81,28 @@ module.exports = function (blocks, blockSize, offsetCodec) {
     })
   }
 
+  /**
+   * Overwrites an item at `offset` with null bytes.
+   *
+   * @param {number} offset - the offset of the item to overwrite
+   * @param {function} cb - callback that returns any error as an argument
+   */
+  const overwrite = (offset, cb) => {
+    blocks.readUInt32BE(offset, function (err, len) {
+      if (err) return cb(err)
+
+      const bookend = Buffer.alloc(4)
+      bookend.writeUInt32BE(len, 0)
+
+      const nullBytes = Buffer.alloc(len)
+      const full = Buffer.concat([bookend, nullBytes, bookend])
+
+      blocks.write(full, offset, cb)
+    })
+  }
+
   return {
-    frame: frame, getMeta: getMeta, restore: restore
+    frame, getMeta, restore, overwrite
   }
 }
 

@@ -7,6 +7,8 @@ var Append = require('append-batch')
 var createStreamCreator = require('pull-cursor')
 var Cache = require('hashlru')
 var Looper = require('pull-looper')
+var pull = require('pull-stream')
+var filter = require('pull-stream/throughs/filter')
 
 module.exports = function (blocks, frame, codec, file, cache) {
   var since = Obv()
@@ -29,6 +31,10 @@ module.exports = function (blocks, frame, codec, file, cache) {
     })
   })
 
+  var isDeleted = (b) => Buffer.isBuffer(b) === true && b.equals(Buffer.alloc(b.length)) === true
+
+  var isNotDeleted = (b) => isDeleted(b) === false
+
   function getMeta (offset, useCache, cb) {
     if (useCache) {
       var data = cache.get(offset)
@@ -40,6 +46,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
 
     frame.getMeta(offset, function (err, value, prev, next) {
       if(err) return cb(err)
+      if (isDeleted(value)) return cb(null, value, prev, next) // skip decode
 
       var data = {
         value: codec.decode(codec.buffer ? value : value.toString()),
@@ -64,7 +71,20 @@ module.exports = function (blocks, frame, codec, file, cache) {
     filename: file,
     since: since,
     stream: function (opts) {
-      return Looper(createStream(opts))
+      return pull(
+        Looper(createStream(opts)),
+        filter(item => {
+          let value
+
+          if (opts && opts.seqs === false) {
+            value = item
+          } else {
+            value = { item }
+          }
+
+          return isNotDeleted(value)
+        })
+      )
     },
 
     //if value is an array of buffers, then treat that as a batch.
@@ -72,9 +92,35 @@ module.exports = function (blocks, frame, codec, file, cache) {
 
     get: function (offset, cb) {
       frame.getMeta(offset, function (err, value) {
-        if(err) cb(err)
-        else cb(null, codec.decode(value))
+        if (err) return cb(err)
+        if (isDeleted(value)) return cb(new Error('item has been deleted'), -1)
+
+        cb(null, codec.decode(value))
       })
+    },
+    del: (offsets, cb) => {
+      if (Array.isArray(offsets) === false) {
+        // The `seqs` argument may be a single value or an array.
+        // To minimize complexity, this ensures `seqs` is always an array.
+        offsets = [ offsets ]
+      }
+
+      Promise.all(offsets.map(offset =>
+        new Promise((resolve, reject) => {
+          // Simple callback handler for promises.
+          const promiseCb = (err) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve()
+            }
+          }
+
+          cache.remove(offset)
+          frame.overwrite(offset, promiseCb)
+        })
+      )).catch((err) => cb(err))
+      .then(() => cb(null))
     }
   }
 }
