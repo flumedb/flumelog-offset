@@ -18,7 +18,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
   var append = Append(function (batch, cb) {
     since.once(function () { // wait for file to load before appending...
       batch = batch.map(codec.encode).map(function (e) {
-        return Buffer.isBuffer(e) ? e : new Buffer(e)
+        return Buffer.isBuffer(e) ? e : Buffer.from(e)
       })
       var framed = frame.frame(batch, blocks.offset.value)
       var _since = frame.frame.offset

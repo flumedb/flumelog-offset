@@ -8,7 +8,7 @@ function test(name, opts, cb) {
       blockSize: 1024,
       codec: {
         encode: function (v) {
-          return new Buffer(JSON.stringify(v))
+          return Buffer.from(JSON.stringify(v))
         },
         decode: function (v) {
           return JSON.parse(v)
