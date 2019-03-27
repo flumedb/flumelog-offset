@@ -1,7 +1,4 @@
 'use strict'
-var fs = require('fs')
-
-var isBuffer = Buffer.isBuffer
 var Obv = require('obv')
 var Append = require('append-batch')
 var createStreamCreator = require('pull-cursor')
@@ -34,9 +31,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
   var isDeleted = (b) => 
     Buffer.isBuffer(b) === true && b.equals(Buffer.alloc(b.length)) === true
 
-  var isNotDeleted = (b) => {
-    return isDeleted(b) === false
-  }
+  var isNotDeleted = (b) => isDeleted(b) === false
 
   function getMeta (offset, useCache, cb) {
     if (useCache) {
@@ -75,9 +70,13 @@ module.exports = function (blocks, frame, codec, file, cache) {
     filename: file,
     since: since,
     stream: function (opts) {
+      const filterValue = opts && opts.seqs === false
+        ? (item) => isNotDeleted(item)
+        : (item) => isNotDeleted(item.value)
+
       return pull(
         Looper(createStream(opts)),
-        filter(item => isNotDeleted(item.value))
+        filter(filterValue)
       )
     },
 
@@ -118,8 +117,4 @@ module.exports = function (blocks, frame, codec, file, cache) {
     }
   }
 }
-
-
-
-
 

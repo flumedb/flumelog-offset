@@ -8,7 +8,7 @@
     "url": "git://github.com/flumedb/flumelog-offset.git"
   },
   "dependencies": {
-    "aligned-block-file": "github:flumedb/aligned-block-file#add-simple-write",
+    "aligned-block-file": "github:flumedb/aligned-block-file#waiting",
     "append-batch": "^0.0.1",
     "explain-error": "^1.0.3",
     "hashlru": "^2.3.0",
@@ -27,8 +27,8 @@
     "pull-paramap": "^1.2.0",
     "pull-stream": "^3.6.9",
     "pull-write": "^1.1.1",
-    "tape": "^4.9.2",
-    "test-flumelog": "^1.0.0"
+    "tape": "^4.10.1",
+    "test-flumelog": "1.0.0"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
