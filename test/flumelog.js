@@ -2,7 +2,6 @@ var pull = require('pull-stream')
 var create = require('../')
 var testLog = require('test-flumelog')
 
-
 function test(name, opts, cb) {
   testLog(function () {
     return create('/tmp/test_flumelog-offset_'+Date.now(), Object.assign({
