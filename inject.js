@@ -27,8 +27,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
     })
   })
 
-  var isDeleted = (b) => Buffer.isBuffer(b) === true && b.equals(Buffer.alloc(b.length)) === true
-
+  var isDeleted = (b) => Buffer.isBuffer(b) && b.equals(Buffer.alloc(b.length))
   var isNotDeleted = (b) => isDeleted(b) === false
 
   function getMeta (offset, useCache, cb) {
