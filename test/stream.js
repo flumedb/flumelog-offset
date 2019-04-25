@@ -5,7 +5,7 @@ var tape = require('tape')
 var log = Log('/tmp/test_offset-log_'+Date.now(), {blockSize: 1024})
 
 function encode (obj) {
-  return new Buffer(JSON.stringify(obj))
+  return Buffer.from(JSON.stringify(obj))
 }
 
 function decode (b) {

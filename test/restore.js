@@ -61,7 +61,6 @@ function test(t, name, opts) {
       if(err) throw err
       fs.readFile(file, function (err, buf) {
         if(err) throw err
-        var offset = opts.offsetCodec.decode(buf, buf.length - opts.offsetCodec.byteWidth)
         var slice = stat.size - ~~(ary[ary.length-1].length/2)
         console.log('slice at:', slice)
         fs.truncate(file, slice, function (err) {

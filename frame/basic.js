@@ -6,7 +6,7 @@ module.exports = function (blocks, codec) {
 
   function frame (data, _offset) {
     var length = data.reduce(function (total, value) { return total + value.length }, 0)
-    var b = new Buffer(length + data.length * 8)
+    var b = Buffer.alloc(length + data.length * 8)
     var offset = 0
     for(var i = 0; i < data.length; i++) {
       var buf = data[i]

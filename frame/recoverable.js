@@ -13,7 +13,7 @@ module.exports = function (blocks, blockSize, offsetCodec) {
   function frame(data, start) {
     var _start = start
     var length = data.reduce(function (total, value) { return total + value.length }, 0)
-    var b = new Buffer(length + data.length * (8+fsw))
+    var b = Buffer.alloc(length + data.length * (8+fsw))
     var offset = 0
     for(var i = 0; i < data.length; i++) {
       var buf = data[i]
@@ -81,8 +81,28 @@ module.exports = function (blocks, blockSize, offsetCodec) {
     })
   }
 
+  /**
+   * Overwrites an item at `offset` with null bytes.
+   *
+   * @param {number} offset - the offset of the item to overwrite
+   * @param {function} cb - callback that returns any error as an argument
+   */
+  const overwrite = (offset, cb) => {
+    blocks.readUInt32BE(offset, function (err, len) {
+      if (err) return cb(err)
+
+      const bookend = Buffer.alloc(4)
+      bookend.writeUInt32BE(len, 0)
+
+      const nullBytes = Buffer.alloc(len)
+      const full = Buffer.concat([bookend, nullBytes, bookend])
+
+      blocks.write(full, offset, cb)
+    })
+  }
+
   return {
-    frame: frame, getMeta: getMeta, restore: restore
+    frame, getMeta, restore, overwrite
   }
 }
 

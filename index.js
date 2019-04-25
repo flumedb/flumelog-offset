@@ -13,11 +13,10 @@ module.exports = function (file, opts) {
 
   var blockSize = opts.blockSize || 1024*16
   var codec = opts.codec || {encode: id, decode: id, buffer: true}
-  var flags = opts.flags || 'a+'
   var cache = opts.cache || Cache(1024)
   var offsetCodec = opts.offsetCodec || 32
 
-  var blocks = Blocks(file, blockSize, flags, cache)
+  var blocks = Blocks(file, blockSize, opts.flags, cache)
   var frame = createFrame(blocks, blockSize, offsetCodec)
   return inject(blocks, frame, codec, file)
 }

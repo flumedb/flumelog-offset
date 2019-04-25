@@ -18,18 +18,18 @@ pull(
 tape('simple', function (t) {
   t.equal(db.since.value, undefined)
   var offsets = []
-  var rm = db.since(function (_v) {
+  db.since(function (_v) {
     offsets.push(_v)
   })
   db.since.once(function (_v) {
     t.equal(_v, -1)
 
-    db.append(new Buffer('hello world'), function (err, offset1) {
+    db.append(Buffer.from('hello world'), function (err, offset1) {
       if(err) throw err
       t.equal(offset1, db.since.value)
       //NOTE: 'hello world'.length + 8 (start frame + end frame)
       t.equal(db.since.value, 0)
-      db.append(new Buffer('hello offset db'), function (err, offset2) {
+      db.append(Buffer.from('hello offset db'), function (err, offset2) {
         if(err) throw err
         t.ok(offset2 > offset1)
         t.equal(offset2, db.since.value)
@@ -41,7 +41,14 @@ tape('simple', function (t) {
           db.get(offset2, function (err, b2) {
             if(err) throw err
             t.equal(b2.toString(), 'hello offset db')
-            t.end()
+            db.del(offset1, function (err) {
+              t.error(err)
+              db.get(offset1, function (err) {
+                t.ok(err)
+                t.equal(err.message, 'item has been deleted')
+                t.end()
+              })
+            })
           })
         })
       })
@@ -73,7 +80,7 @@ tape('stream', function (t) {
     db.stream({min: 0, seqs: false}),
     pull.collect(function (err, ary) {
       if(err) throw err
-      t.deepEqual(ary.map(String), ['hello world', 'hello offset db'])
+      t.deepEqual(ary.map(String), ['hello offset db'])
       t.end()
     })
   )
@@ -90,7 +97,7 @@ tape('reverse', function (t) {
     db.stream({reverse: true, seqs: false}),
     pull.collect(function (err, ary) {
       console.log(ary, db.since.value)
-      t.deepEqual(ary.map(String), ['hello offset db', 'hello world'])
+      t.deepEqual(ary.map(String), ['hello offset db'])
       t.end()
     })
   )
@@ -101,8 +108,8 @@ tape('append batch', function (t) {
   var db = Offset(file, {blockSize: 16})
 
   db.append([
-    new Buffer('hello world'),
-    new Buffer('hello offset db'),
+    Buffer.from('hello world'),
+    Buffer.from('hello offset db'),
   ], function (err, offsets) {
     if(err) throw err
     t.ok(offsets)
@@ -115,16 +122,6 @@ tape('append batch', function (t) {
 tape('stream in empty database', function (t) {
   var file = '/tmp/offset-test_3_'+Date.now()+'.log'
   var db = Offset(file, {blockSize: 16})
-
-//  db.append([
-//    new Buffer('hello world'),
-//    new Buffer('hello offset db'),
-//  ], function (err, offsets) {
-//    if(err) throw err
-//    t.deepEqual(offsets, [0, 19])
-//    console.log('OFFSETS', offsets)
-//    t.end()
-//  })
 
   db.since.once(function (_offset) {
     t.equal(_offset, -1, 'offset is zero')
@@ -146,21 +143,11 @@ tape('stream in before append cb', function (t) {
   var file = '/tmp/offset-test_4_'+Date.now()+'.log'
   var db = Offset(file, {blockSize: 16})
 
-//  db.append([
-//    new Buffer('hello world'),
-//    new Buffer('hello offset db'),
-//  ], function (err, offsets) {
-//    if(err) throw err
-//    t.deepEqual(offsets, [0, 19])
-//    console.log('OFFSETS', offsets)
-//    t.end()
-//  })
-
   db.since.once(function (_offset) {
     t.equal(_offset, -1, 'offset is zero')
   })
 
-  db.append(new Buffer('hello world'), function (err, offset) {
+  db.append(Buffer.from('hello world'), function (err, offset) {
     
   })
 

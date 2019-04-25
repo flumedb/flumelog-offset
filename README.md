@@ -33,7 +33,7 @@ var OffsetLog = require('flumelog-offset')
 var log = OffsetLog('/data/log', {
   blockSize: 1024,        // default is 1024*16
   codec: {encode, decode} // defaults to a json codec
-  flags: 'r',             // default is 'a+',
+  flags: 'r',             // default is 'r+' (from aligned-block-file)
   cache: {set, get}       // default is require('hashlru')(1024)
   offsetCodec: {          // default is require('./frame/offset-codecs')[32]
     byteWidth,            // with the default offset-codec, the file can have
