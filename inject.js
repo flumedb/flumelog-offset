@@ -123,6 +123,9 @@ module.exports = function (blocks, frame, codec, file, cache) {
         })
       )).catch((err) => cb(err))
       .then(() => cb(null))
+    },
+    methods: {
+      del: 'async'
     }
   }
 }
