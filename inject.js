@@ -7,6 +7,8 @@ var Looper = require('pull-looper')
 var pull = require('pull-stream')
 var filter = require('pull-stream/throughs/filter')
 
+const EDELETED = n
+
 module.exports = function (blocks, frame, codec, file, cache) {
   var since = Obv()
   cache = cache || Cache(256)
@@ -88,7 +90,10 @@ module.exports = function (blocks, frame, codec, file, cache) {
     get: function (offset, cb) {
       frame.getMeta(offset, function (err, value) {
         if (err) return cb(err)
-        if (isDeleted(value)) return cb(new Error('item has been deleted'), -1)
+        if (isDeleted(value)) {
+          const err = new Error('item has been deletd')
+          err.code = 'EDELETED'
+          return cb(err, -1)
 
         cb(null, codec.decode(value))
       })
