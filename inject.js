@@ -7,8 +7,6 @@ var Looper = require('pull-looper')
 var pull = require('pull-stream')
 var filter = require('pull-stream/throughs/filter')
 
-const EDELETED = n
-
 module.exports = function (blocks, frame, codec, file, cache) {
   var since = Obv()
   cache = cache || Cache(256)
@@ -94,6 +92,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
           const err = new Error('item has been deletd')
           err.code = 'EDELETED'
           return cb(err, -1)
+        }
 
         cb(null, codec.decode(value))
       })
