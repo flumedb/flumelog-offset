@@ -69,15 +69,11 @@ module.exports = function (blocks, frame, codec, file, cache) {
       return pull(
         Looper(createStream(opts)),
         filter(item => {
-          let value
-
           if (opts && opts.seqs === false) {
-            value = item
+            return isNotDeleted(item)
           } else {
-            value = { item }
+            return isNotDeleted(item.value)
           }
-
-          return isNotDeleted(value)
         })
       )
     },
