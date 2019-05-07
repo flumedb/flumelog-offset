@@ -87,6 +87,18 @@ tape('stream', function (t) {
 
 })
 
+tape('stream with options', function (t) {
+  pull(
+    db.stream({min: 0, seqs: true}),
+    pull.collect(function (err, ary) {
+      if(err) throw err
+
+      t.deepEqual(ary.map(item => String(item.value)), ['hello offset db'])
+      t.end()
+    })
+  )
+})
+
 tape('live', function (t) {
   t.deepEqual(live.map(String), ['hello world', 'hello offset db'])
   t.end()
