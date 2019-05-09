@@ -86,7 +86,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
         if (err) return cb(err)
         if (isDeleted(value)) {
           const err = new Error('item has been deleted')
-          err.code = 'EDELETED'
+          err.code = 'flumelog:deleted'
           return cb(err, -1)
         }
 
