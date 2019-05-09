@@ -85,7 +85,7 @@ module.exports = function (blocks, frame, codec, file, cache) {
       frame.getMeta(offset, function (err, value) {
         if (err) return cb(err)
         if (isDeleted(value)) {
-          const err = new Error('item has been deletd')
+          const err = new Error('item has been deleted')
           err.code = 'EDELETED'
           return cb(err, -1)
         }
