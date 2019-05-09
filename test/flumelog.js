@@ -3,8 +3,8 @@ var create = require('../')
 var testLog = require('test-flumelog')
 
 function test(name, opts, cb) {
-  testLog(function () {
-    return create('/tmp/test_flumelog-offset_'+Date.now(), Object.assign({
+  testLog(function (filename) {
+    return create(filename, Object.assign({
       blockSize: 1024,
       codec: {
         encode: function (v) {

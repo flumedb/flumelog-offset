@@ -1,4 +1,4 @@
-var FlumeLog = require('./')
+var FlumeLog = require('../')
 var codec = require('flumecodec')
 
 require('bench-flumelog')(function () {
