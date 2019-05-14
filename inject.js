@@ -84,7 +84,11 @@ module.exports = function (blocks, frame, codec, file, cache) {
     get: function (offset, cb) {
       frame.getMeta(offset, function (err, value) {
         if (err) return cb(err)
-        if (isDeleted(value)) return cb(new Error('item has been deleted'), -1)
+        if (isDeleted(value)) {
+          const err = new Error('item has been deleted')
+          err.code = 'flumelog:deleted'
+          return cb(err, -1)
+        }
 
         cb(null, codec.decode(value))
       })
@@ -119,6 +123,9 @@ module.exports = function (blocks, frame, codec, file, cache) {
         })
       )).catch((err) => cb(err))
       .then(() => cb(null))
+    },
+    methods: {
+      del: 'async'
     }
   }
 }
