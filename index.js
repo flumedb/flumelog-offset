@@ -14,7 +14,7 @@ module.exports = function (file, opts) {
   var blockSize = opts.blockSize || 1024*16
   var codec = opts.codec || {encode: id, decode: id, buffer: true}
   var flags = opts.flags || 'a+'
-  var cache = opts.cache || Cache(8*1024)
+  var cache = opts.cache || Cache(1024)
   var offsetCodec = opts.offsetCodec || 32
 
   var blocks = Blocks(file, blockSize, opts.flags, cache)
