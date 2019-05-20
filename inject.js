@@ -69,15 +69,11 @@ module.exports = function (blocks, frame, codec, file, cache) {
       return pull(
         Looper(createStream(opts)),
         filter(item => {
-          let value
-
           if (opts && opts.seqs === false) {
-            value = item
+            return isNotDeleted(item)
           } else {
-            value = { item }
+            return isNotDeleted(item.value)
           }
-
-          return isNotDeleted(value)
         })
       )
     },
@@ -89,8 +85,8 @@ module.exports = function (blocks, frame, codec, file, cache) {
       frame.getMeta(offset, function (err, value) {
         if (err) return cb(err)
         if (isDeleted(value)) {
-          const err = new Error('item has been deletd')
-          err.code = 'EDELETED'
+          const err = new Error('item has been deleted')
+          err.code = 'flumelog:deleted'
           return cb(err, -1)
         }
 
