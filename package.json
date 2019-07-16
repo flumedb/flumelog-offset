@@ -16,12 +16,12 @@
     "obv": "0.0.1",
     "pull-cursor": "^3.0.0",
     "pull-looper": "^1.0.0",
+    "pull-stream": "^3.6.13",
     "uint48be": "^2.0.1"
   },
   "devDependencies": {
     "bench-flumelog": "^1.2.0",
     "flumecodec": "0.0.1",
-    "pull-stream": "^3.6.9",
     "tape": "^4.10.1",
     "test-flumelog": "1.0.0"
   },
