@@ -12,6 +12,17 @@ function decode (b) {
   return JSON.parse(b.toString())
 }
 
+tape('stream on an empty database', function (t) {
+  pull(
+    log.stream(),
+    pull.collect(function (err, ary) {
+      t.notOk(err)
+      t.deepEqual(ary, [])
+      t.end()
+    })
+  )
+})
+
 tape('append objects, and stream them out the same', function (t) {
 
   var n = 4
@@ -58,8 +69,3 @@ tape('append objects, and stream them out the same', function (t) {
     })
   )
 })
-
-
-
-
-
