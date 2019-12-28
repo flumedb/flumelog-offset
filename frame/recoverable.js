@@ -84,6 +84,10 @@ module.exports = function (blocks, blockSize, offsetCodec) {
   /**
    * Overwrites an item at `offset` with null bytes.
    *
+   * The only bytes we need to change are the actual data bytes, so we can skip
+   * the book-end bytes that record the length of the data and *only* touch the
+   * data bytes themselves.
+   *
    * @param {number} offset - the offset of the item to overwrite
    * @param {function} cb - callback that returns any error as an argument
    */
@@ -91,13 +95,8 @@ module.exports = function (blocks, blockSize, offsetCodec) {
     blocks.readUInt32BE(offset, function (err, len) {
       if (err) return cb(err)
 
-      const bookend = Buffer.alloc(4)
-      bookend.writeUInt32BE(len, 0)
-
       const nullBytes = Buffer.alloc(len)
-      const full = Buffer.concat([bookend, nullBytes, bookend])
-
-      blocks.write(full, offset, cb)
+      blocks.write(nullBytes, offset + 4, cb)
     })
   }
 
