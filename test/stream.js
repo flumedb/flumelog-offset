@@ -5,12 +5,23 @@ var tape = require('tape')
 var log = Log('/tmp/test_offset-log_'+Date.now(), {blockSize: 1024})
 
 function encode (obj) {
-  return new Buffer(JSON.stringify(obj))
+  return Buffer.from(JSON.stringify(obj))
 }
 
 function decode (b) {
   return JSON.parse(b.toString())
 }
+
+tape('stream on an empty database', function (t) {
+  pull(
+    log.stream(),
+    pull.collect(function (err, ary) {
+      t.notOk(err)
+      t.deepEqual(ary, [])
+      t.end()
+    })
+  )
+})
 
 tape('append objects, and stream them out the same', function (t) {
 
@@ -58,8 +69,3 @@ tape('append objects, and stream them out the same', function (t) {
     })
   )
 })
-
-
-
-
-
