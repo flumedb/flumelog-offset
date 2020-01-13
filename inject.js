@@ -124,13 +124,13 @@ module.exports = function (blocks, frame, codec, file, cache) {
       )).catch((err) => cb(err))
       .then(() => cb(null))
     },
+    close: function (cb) {
+      cb()
+    },
     methods: {
       del: 'async'
     }
   }
 }
-
-
-
 
 
