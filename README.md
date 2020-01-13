@@ -32,7 +32,7 @@ db.append({greets: 'hello!'}, function (cb) {
 var OffsetLog = require('flumelog-offset')
 var log = OffsetLog('/data/log', {
   blockSize: 1024,        // default is 1024*16
-  codec: {encode, decode} // defaults to a json codec
+  codec: {encode, decode} // defaults to no codec, expects buffers. for json use flumecodec/json
   flags: 'r',             // default is 'r+' (from aligned-block-file)
   cache: {set, get}       // default is require('hashlru')(1024)
   offsetCodec: {          // default is require('./frame/offset-codecs')[32]
@@ -86,7 +86,3 @@ to see the last N items, and so you don't need an index for this.
 ## License
 
 MIT
-
-
-
-
